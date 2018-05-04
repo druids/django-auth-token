@@ -1,0 +1,11 @@
+# Darwin makefile configuration
+
+OPENHTML := open
+
+
+installpackages:
+	brew install python postgresql nodejs npm wget libjpeg libpng gettext msgpack
+	brew link --force gettext
+	pip install virtualenv
+	npm install -g bower grunt grunt-cli
+	gem install sass # you may need to run as root

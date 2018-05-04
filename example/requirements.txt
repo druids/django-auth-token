@@ -1,0 +1,5 @@
+Django==2.0
+https://github.com/druids/germanium/tarball/2.0.0#egg=germanium-2.0.0
+coverage==4.5.1
+selenium==3.11.0
+six==1.11.0
