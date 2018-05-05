@@ -62,3 +62,30 @@ Extra configuration
     AUTH_TOKEN_RENEWAL_EXEMPT_HEADER =  'X-Authorization-Renewal-Exempt'  # Header name which causes that the token expiration time will not be extended
     AUTH_TOKEN_EXPIRATION_HEADER = 'X-Authorization-Expiration'  # Header name which contains information about token expiration
 
+Django-is-core
+--------------
+
+If you are using django-is-core the tokens are automatically used for user authorization. You can find views and
+resources that django-is-core uses in package `auth_token.contrib.is_core`
+
+Django-rests
+------------
+
+Django-auth-token supports django-rest-framework too. In the package `auth_token.contrib.rest_framework` you can find
+views and authentication class.
+
+There are `auth_token.contrib.rest_framework.wiews.LoginAuthToken` and
+`auth_token.contrib.rest_framework.wiews.LoginAuthToken` which you can register to your url patterns
+to add endpoints for user login/logout.
+
+You should set `auth_token.contrib.rest_framework.authentication.AuthTokenAuthentication` to your settings:
+
+.. code-block:: python
+
+    REST_FRAMEWORK = {
+        # ...
+        'DEFAULT_PERMISSION_CLASSES': (
+            'rest_framework.permissions.IsAuthenticated',
+        )
+        # ...
+    }

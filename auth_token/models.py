@@ -5,11 +5,11 @@ from datetime import timedelta
 from django.conf import settings as django_settings
 from django.db import models
 from django.contrib.auth.models import AnonymousUser
+from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.utils.encoding import force_text
 
-from django.contrib.contenttypes.fields import GenericForeignKey
 
 from auth_token.config import settings
 
