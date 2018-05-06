@@ -1,5 +1,5 @@
-from is_core.auth_token.default.resource import AuthResource as DefaultAuthResource
-from is_core.auth_token.auth_security import LOGIN_THROTTLING_VALIDATORS
+from auth_token.contrib.is_core.default.resource import AuthResource as DefaultAuthResource
+from auth_token.contrib.is_core.auth_security import LOGIN_THROTTLING_VALIDATORS
 
 from security.models import InputLoggedRequest
 from security.decorators import throttling

@@ -1,8 +1,8 @@
 from security.models import InputLoggedRequest
 from security.decorators import throttling_all
 
-from is_core.auth_token.default.views import TokenLoginView as DefaultTokenLoginView
-from is_core.auth_token.auth_security import LOGIN_THROTTLING_VALIDATORS
+from auth_token.contrib.is_core.default.views import TokenLoginView as DefaultTokenLoginView
+from auth_token.contrib.is_core.auth_security import LOGIN_THROTTLING_VALIDATORS
 
 
 @throttling_all(*LOGIN_THROTTLING_VALIDATORS)

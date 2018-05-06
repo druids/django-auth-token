@@ -1,11 +1,11 @@
 from django.http.response import HttpResponseRedirect
 from django.views.generic.base import RedirectView
 
-from is_core.config import settings
 from is_core.generic_views import DefaultCoreViewMixin
 from is_core.generic_views.mixins import GetCoreObjViewMixin
 from is_core.generic_views.auth_views import LogoutView, LoginView
 
+from auth_token.config import settings
 from auth_token.utils import login, logout, takeover
 from auth_token.contrib.is_core.forms import TokenAuthenticationForm
 
