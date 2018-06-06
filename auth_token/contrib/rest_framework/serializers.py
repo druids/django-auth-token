@@ -12,7 +12,7 @@ class AuthTokenSerializer(serializers.Serializer):
         style={'input_type': 'password'},
         trim_whitespace=False
     )
-    permanent = serializers.BooleanField(label=_('Permanent'))
+    permanent = serializers.BooleanField(label=_('Permanent'), required=False)
 
     def validate(self, attrs):
         username = attrs.get('username')
