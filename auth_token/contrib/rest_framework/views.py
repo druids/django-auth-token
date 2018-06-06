@@ -53,7 +53,7 @@ class LoginAuthToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        login(request._request, user, not serializer.validated_data['permanent'])
+        login(request._request, user, not serializer.validated_data.get('permanent', False))
         return Response({'token': request._request.token.key})
 
 
