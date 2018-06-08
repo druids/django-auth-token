@@ -5,7 +5,7 @@ from pyston.exception import RESTException
 
 from is_core.rest.resource import RESTResource
 
-from auth_token.contrib.is_core.forms import TokenAuthenticationForm
+from auth_token.contrib.is_core_auth.forms import TokenAuthenticationSmartForm
 from auth_token.utils import login, logout
 
 
@@ -13,7 +13,7 @@ class AuthResource(RESTResource):
 
     login_required = False
     allowed_methods = ('post', 'delete')
-    form_class = TokenAuthenticationForm
+    form_class = TokenAuthenticationSmartForm
 
     def _sucessful_login(self, request):
         pass

@@ -1,0 +1,37 @@
+from django.contrib.auth.views import LoginView, LogoutView
+from django.utils.decorators import method_decorator
+from django.http import HttpResponseRedirect
+from django.views.decorators.cache import never_cache
+
+from auth_token.contrib.common.forms import TokenAuthenticationForm
+from auth_token.utils import login, logout
+
+
+class TokenLoginView(LoginView):
+
+    form_class = TokenAuthenticationForm
+
+    def _login(self, user, expiration, form):
+        login(self.request, user, expiration)
+
+    def form_valid(self, form):
+        """
+        The user has provided valid credentials (this was checked in AuthenticationForm.is_valid()). So now we
+        can check the test cookie stuff and log him in.
+        """
+        self._login(form.get_user(), not form.is_permanent(), form)
+        return HttpResponseRedirect(self.get_success_url())
+
+
+class TokenLogoutView(LogoutView):
+
+    template_name = 'registration/logout.html'
+
+    @method_decorator(never_cache)
+    def dispatch(self, request, *args, **kwargs):
+        logout(request)
+        next_page = self.get_next_page()
+        if next_page:
+            # Redirect to this page until the session has been cleared.
+            return HttpResponseRedirect(next_page)
+        return super(LogoutView, self).dispatch(request, *args, **kwargs)
