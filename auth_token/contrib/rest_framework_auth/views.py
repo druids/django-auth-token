@@ -5,6 +5,15 @@ from rest_framework.views import APIView
 
 from auth_token.utils import login, logout
 
+from auth_token.contrib.common.default.views import TokenLogoutView as OriginTokenLogoutView
+
+try:
+    import security
+    from auth_token.contrib.common.auth_security.views import TokenLoginView
+except ImportError:
+    from auth_token.contrib.common.default.views import TokenLoginView
+
+
 from .serializers import AuthTokenSerializer
 
 
@@ -38,7 +47,7 @@ class LoginAuthToken(APIView):
                     name='permanent',
                     required=False,
                     location='form',
-                    schema=coreschema.String(
+                    schema=coreschema.Boolean(
                         title='Permanent',
                         description='Define if login can expire',
                     ),
@@ -63,3 +72,11 @@ class LogoutAuthToken(APIView):
         if request.user.is_authenticated:
             logout(request._request)
         return Response(status=204)
+
+
+class TokenLogoutView(OriginTokenLogoutView):
+
+    template_name = None
+
+    def get_next_page(self):
+        return super().get_next_page() or ''
