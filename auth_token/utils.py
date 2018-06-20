@@ -84,18 +84,23 @@ def create_auth_header_value(token):
     """
     Returns a value for request "Authorization" header with the token.
     """
-    return '{} {}'.format(settings.HEADER_TOKEN_TYPE, token)
+    return token if settings.HEADER_TOKEN_TYPE is None else '{} {}'.format(settings.HEADER_TOKEN_TYPE, token)
 
 
 def parse_auth_header_value(request):
     """
     Returns a token parsed from the "Authorization" header.
     """
-    match = re.match(
-        '{} ([^ ]+)$'.format(settings.HEADER_TOKEN_TYPE),
-        request.META.get(header_name_to_django(settings.HEADER_NAME), '')
-    )
-    return match.group(1) if match else None
+    header_value = request.META.get(header_name_to_django(settings.HEADER_NAME))
+
+    if not header_value:
+        return None
+
+    if settings.HEADER_TOKEN_TYPE is None:
+        return header_value
+    else:
+        match = re.match('{} ([^ ]+)$'.format(settings.HEADER_TOKEN_TYPE), header_value)
+        return match.group(1) if match else None
 
 
 def get_token(request):
