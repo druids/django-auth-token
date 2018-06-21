@@ -84,18 +84,26 @@ def create_auth_header_value(token):
     """
     Returns a value for request "Authorization" header with the token.
     """
-    return '{} {}'.format(settings.HEADER_TOKEN_TYPE, token)
+    return token if settings.HEADER_TOKEN_TYPE is None else '{} {}'.format(settings.HEADER_TOKEN_TYPE, token)
 
 
 def parse_auth_header_value(request):
     """
     Returns a token parsed from the "Authorization" header.
     """
-    match = re.match(
-        '{} ([^ ]+)$'.format(settings.HEADER_TOKEN_TYPE),
-        request.META.get(header_name_to_django(settings.HEADER_NAME), '')
-    )
-    return match.group(1) if match else None
+    header_value = request.META.get(header_name_to_django(settings.HEADER_NAME))
+
+    if not header_value:
+        raise ValueError('Authorization header missing')
+
+    if settings.HEADER_TOKEN_TYPE is None:
+        return header_value
+    else:
+        match = re.match(
+            '{} ([^ ]+)$'.format(settings.HEADER_TOKEN_TYPE),
+            request.META.get(header_name_to_django(settings.HEADER_NAME), '')
+        )
+        return match.group(1) if match else None
 
 
 def get_token(request):
@@ -103,13 +111,15 @@ def get_token(request):
     Returns the token model instance associated with the given request token key.
     If no user is retrieved AnonymousToken is returned.
     """
-    auth_token = parse_auth_header_value(request) or request.COOKIES.get(settings.COOKIE_NAME)
+    try:
+        auth_token, token_is_from_header = parse_auth_header_value(request), True
+    except ValueError:
+        auth_token, token_is_from_header = request.COOKIES.get(settings.COOKIE_NAME), False
 
     try:
         token = Token.objects.get(key=auth_token, is_active=True)
         if not token.is_expired:
-            if auth_token == request.META.get(header_name_to_django(settings.HEADER_NAME)):
-                token.is_from_header = True
+            token.is_from_header = token_is_from_header
             return token
     except Token.DoesNotExist:
         pass
@@ -117,7 +127,11 @@ def get_token(request):
 
 
 def dont_enforce_csrf_checks(request):
-    return (getattr(request, '_dont_enforce_csrf_checks', False) or parse_auth_header_value(request))
+    # If token is get from HTTP header CSRF check is not necessary
+    return (
+        header_name_to_django(settings.HEADER_NAME) in request.META or
+        getattr(request, '_dont_enforce_csrf_checks', False)
+    )
 
 
 def get_user_from_token(token):
