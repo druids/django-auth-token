@@ -14,18 +14,20 @@ class AuthResource(RESTResource):
     login_required = False
     allowed_methods = ('post', 'delete')
     form_class = TokenAuthenticationSmartForm
+    allowed_cookie = False
+    allowed_header = True
 
     def _sucessful_login(self, request):
         pass
 
     def _login(self, user, expiration, form):
-        login(self.request, user, expiration)
+        login(self.request, user, expiration, allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header)
 
     def _unsucessful_login(self, request):
         pass
 
     def get_form_kwargs(self):
-        return {'data': self.get_dict_data()}
+        return {'data': self.get_dict_data(), 'request': self.request}
 
     def get_form_class(self):
         return self.form_class

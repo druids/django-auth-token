@@ -9,9 +9,9 @@ setup(
     keywords='django, authorization',
     author='Lubos Matl',
     author_email='matllubos@gmail.com',
-    url='https://github.com/matllubos/django-auth-token',
+    url='https://github.com/druids/django-auth-token',
     license='BSD',
-    package_dir={'is_core': 'is_core'},
+    package_dir={'auth_token': 'auth_token'},
     include_package_data=True,
     packages=find_packages(),
     classifiers=[

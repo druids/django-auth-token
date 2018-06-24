@@ -1,4 +1,5 @@
-import os, binascii
+import os
+import binascii
 
 from datetime import timedelta
 
@@ -9,7 +10,6 @@ from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 from django.utils import timezone
 from django.utils.encoding import force_text
-
 
 from auth_token.config import settings
 
@@ -29,12 +29,15 @@ class Token(models.Model):
     # https://github.com/selwin/python-user-agents for parse
     # Limited size to 256
     user_agent = models.CharField(max_length=256, null=True, blank=True)
-    expiration = models.BooleanField(null=False, default=True)
+    expiration = models.BooleanField(default=True)
     ip = models.GenericIPAddressField(null=False, blank=False)
     auth_slug = models.SlugField(null=True, blank=True)
     backend = models.CharField(max_length=255, null=False, blank=False)
+    allowed_cookie = models.BooleanField(default=True)
+    allowed_header = models.BooleanField(default=True)
 
     is_from_header = False
+    is_from_cookie = False
 
     @property
     def active_takeover(self):
@@ -101,8 +104,11 @@ class AnonymousToken:
     user_agent = None
     is_expired = True
     is_from_header = False
+    is_from_cookie = False
     active_takeover = None
     backend = None
+    allowed_cookie = False
+    allowed_header = False
 
     def save(self):
         raise NotImplementedError

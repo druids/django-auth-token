@@ -2,11 +2,13 @@ from django.conf import settings as django_settings
 
 
 DEFAULTS = {
+    'COOKIE': True,  # Cookie authorization is allowed
     'COOKIE_NAME': 'Authorization',  # Authorization token cookie name
     'COOKIE_AGE': 60 * 60 * 24 * 7 * 2,  # Age of cookie, in seconds (default: 2 weeks)
     'COOKIE_HTTPONLY': False,  # Scripts can read authorization cookie
     'COOKIE_SECURE': False,  # Cookie can be sent only via HTTPS
     'COOKIE_DOMAIN': None,  # Cookie domain name
+    'HEADER': True,  # Header authorization is allowed
     'HEADER_NAME': 'Authorization',  # Authorization token HTTP header name
     'HEADER_TOKEN_TYPE': 'Bearer',  # Type of the token
     'DEFAULT_TOKEN_AGE': 60 * 60,  # Default token expiration time (default: 1 hour)

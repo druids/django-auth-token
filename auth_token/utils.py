@@ -16,7 +16,8 @@ def header_name_to_django(header_name):
     return '_'.join(('HTTP', header_name.replace('-', '_').upper()))
 
 
-def login(request, user, expiration=True, auth_slug=None, related_objs=None, backend=None):
+def login(request, user, expiration=True, auth_slug=None, related_objs=None, backend=None, allowed_cookie=True,
+          allowed_header=True):
     """
     Persist token into database. Token is stored inside cookie therefore is not necessary
     reauthenticate user for every request.
@@ -41,7 +42,7 @@ def login(request, user, expiration=True, auth_slug=None, related_objs=None, bac
 
     token = Token.objects.create(user=user, user_agent=request.META.get('HTTP_USER_AGENT', '')[:256],
                                  expiration=expiration, auth_slug=auth_slug, ip=get_ip(request),
-                                 backend=backend)
+                                 backend=backend, allowed_cookie=allowed_cookie, allowed_header=allowed_header)
 
     for related_obj in related_objs:
         token.related_objects.create(content_object=related_obj)
@@ -84,18 +85,38 @@ def create_auth_header_value(token):
     """
     Returns a value for request "Authorization" header with the token.
     """
-    return '{} {}'.format(settings.HEADER_TOKEN_TYPE, token)
+    return token if settings.HEADER_TOKEN_TYPE is None else '{} {}'.format(settings.HEADER_TOKEN_TYPE, token)
 
 
 def parse_auth_header_value(request):
     """
     Returns a token parsed from the "Authorization" header.
     """
-    match = re.match(
-        '{} ([^ ]+)$'.format(settings.HEADER_TOKEN_TYPE),
-        request.META.get(header_name_to_django(settings.HEADER_NAME), '')
-    )
+    header_value = request.META.get(header_name_to_django(settings.HEADER_NAME))
+
+    if not header_value:
+        raise ValueError('Authorization header missing')
+
+    if settings.HEADER_TOKEN_TYPE is None:
+        return header_value
+    else:
+        match = re.match(
+            '{} ([^ ]+)$'.format(settings.HEADER_TOKEN_TYPE),
+            request.META.get(header_name_to_django(settings.HEADER_NAME), '')
+        )
     return match.group(1) if match else None
+
+
+def get_token_key_from_request(request):
+    """
+    Returns token key from request. With token is returned token source too.
+    """
+    if settings.HEADER and header_name_to_django(settings.HEADER_NAME) in request.META:
+        return parse_auth_header_value(request), True, False
+    elif settings.COOKIE:
+        return request.COOKIES.get(settings.COOKIE_NAME), False, True
+    else:
+        return None, False, False
 
 
 def get_token(request):
@@ -103,13 +124,16 @@ def get_token(request):
     Returns the token model instance associated with the given request token key.
     If no user is retrieved AnonymousToken is returned.
     """
-    auth_token = parse_auth_header_value(request) or request.COOKIES.get(settings.COOKIE_NAME)
+    auth_token, token_is_from_header, token_is_from_cookie = get_token_key_from_request(request)
 
     try:
-        token = Token.objects.get(key=auth_token, is_active=True)
+        token = Token.objects.get(
+            key=auth_token, is_active=True,
+            allowed_cookie__gte=token_is_from_cookie,
+            allowed_header__gte=token_is_from_header
+        )
         if not token.is_expired:
-            if auth_token == request.META.get(header_name_to_django(settings.HEADER_NAME)):
-                token.is_from_header = True
+            token.is_from_header, token.is_from_cookie = token_is_from_header, token_is_from_cookie
             return token
     except Token.DoesNotExist:
         pass
@@ -117,7 +141,11 @@ def get_token(request):
 
 
 def dont_enforce_csrf_checks(request):
-    return (getattr(request, '_dont_enforce_csrf_checks', False) or parse_auth_header_value(request))
+    # If token is get from HTTP header CSRF check is not necessary
+    return (
+        header_name_to_django(settings.HEADER_NAME) in request.META or
+        getattr(request, '_dont_enforce_csrf_checks', False)
+    )
 
 
 def get_user_from_token(token):
