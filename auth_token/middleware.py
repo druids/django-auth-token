@@ -40,9 +40,10 @@ class TokenAuthenticationMiddleware:
 
     def _update_token_and_cookie(self, request, response, max_age, expires):
         request.token.save()
-        response.set_cookie(settings.COOKIE_NAME, force_text(request.token.key), max_age=max_age,
-                            expires=expires, httponly=settings.COOKIE_HTTPONLY,
-                            secure=settings.COOKIE_SECURE, domain=settings.COOKIE_DOMAIN)
+        if settings.COOKIE and request.token.allowed_cookie:
+            response.set_cookie(settings.COOKIE_NAME, force_text(request.token.key), max_age=max_age,
+                                expires=expires, httponly=settings.COOKIE_HTTPONLY,
+                                secure=settings.COOKIE_SECURE, domain=settings.COOKIE_DOMAIN)
         return response
 
     def _set_auth_expiration_header(self, request, response):

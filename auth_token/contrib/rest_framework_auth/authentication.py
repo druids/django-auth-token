@@ -1,5 +1,10 @@
+from django.utils.translation import ugettext
+
 from rest_framework.authentication import BaseAuthentication, CSRFCheck
 from rest_framework import exceptions
+
+from auth_token.config import settings
+from auth_token.utils import get_token_key_from_request
 
 
 class AuthTokenAuthentication(BaseAuthentication):
@@ -15,6 +20,8 @@ class AuthTokenAuthentication(BaseAuthentication):
 
         # Unauthenticated, CSRF validation not required
         if not user or not user.is_active:
+            if get_token_key_from_request(request)[0] is not None:
+                raise exceptions.AuthenticationFailed(ugettext('Invalid authorization token.'))
             return None
 
         self.enforce_csrf(request)
@@ -30,3 +37,6 @@ class AuthTokenAuthentication(BaseAuthentication):
         if reason:
             # CSRF failed, bail with explicit error message
             raise exceptions.PermissionDenied('CSRF Failed: %s' % reason)
+
+    def authenticate_header(self, request):
+        return settings.HEADER_TOKEN_TYPE

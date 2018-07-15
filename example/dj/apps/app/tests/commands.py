@@ -2,15 +2,17 @@ from datetime import timedelta
 
 from io import StringIO
 
-from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.utils import timezone
 
+from germanium.annotations import data_provider
 from germanium.test_cases.default import GermaniumTestCase
-from germanium.tools import assert_equal, assert_false
+from germanium.tools import assert_equal
 
 from auth_token.models import Token
 from auth_token.config import settings
+
+from .base import BaseTestCaseMixin
 
 
 __all__ = (
@@ -18,10 +20,10 @@ __all__ = (
 )
 
 
-class CleanTokensCommandTestCase(GermaniumTestCase):
+class CleanTokensCommandTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
-    def test_clean_tokens_remove_only_old_tokens(self):
-        user = User.objects._create_user('test', 'test@test.cz', 'test', is_staff=False, is_superuser=False)
+    @data_provider('create_user')
+    def test_clean_tokens_remove_only_old_tokens(self, user):
         expired_tokens = [Token.objects.create(user=user, ip='127.0.0.1') for _ in range(10)]
         not_expired_tokens = [Token.objects.create(user=user, ip='127.0.0.1') for _ in
                               range(settings.COUNT_USER_PRESERVED_TOKENS - 5)]

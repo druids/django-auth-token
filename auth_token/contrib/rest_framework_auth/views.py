@@ -4,15 +4,7 @@ from rest_framework.schemas import ManualSchema
 from rest_framework.views import APIView
 
 from auth_token.utils import login, logout
-
-from auth_token.contrib.common.default.views import TokenLogoutView as OriginTokenLogoutView
-
-try:
-    import security
-    from auth_token.contrib.common.auth_security.views import TokenLoginView
-except ImportError:
-    from auth_token.contrib.common.default.views import TokenLoginView
-
+from auth_token.contrib.common.views import LoginView as _LoginView, LogoutView as _LogoutView
 
 from .serializers import AuthTokenSerializer
 
@@ -21,6 +13,7 @@ class LoginAuthToken(APIView):
 
     throttle_classes = ()
     permission_classes = ()
+    authentication_classes = ()
     serializer_class = AuthTokenSerializer
     if coreapi is not None and coreschema is not None:
         schema = ManualSchema(
@@ -55,6 +48,8 @@ class LoginAuthToken(APIView):
             ],
             encoding='application/json',
         )
+    allowed_cookie = False
+    allowed_header = True
 
     def post(self, request, *args, **kwargs):
         serializer = self.serializer_class(data=request.data,
@@ -62,7 +57,10 @@ class LoginAuthToken(APIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
 
-        login(request._request, user, not serializer.validated_data.get('permanent', False))
+        login(
+            request._request, user, not serializer.validated_data.get('permanent', False),
+            allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
+        )
         return Response({'token': request._request.token.key})
 
 
@@ -74,9 +72,14 @@ class LogoutAuthToken(APIView):
         return Response(status=204)
 
 
-class TokenLogoutView(OriginTokenLogoutView):
+class LoginView(_LoginView):
+
+    template_name = 'rest_framework_auth/login.html'
+
+
+class LogoutView(_LogoutView):
 
     template_name = None
 
     def get_next_page(self):
-        return super().get_next_page() or ''
+        return super().get_next_page() or '/'

@@ -104,12 +104,9 @@ endif
 datamigration:
 	$(PYTHON_BIN)/python manage.py datamigration $(app) $(name) $(DJANGO_POSTFIX)
 
-install: cleanvar bootstrap linklibrary initlog initdb syncdb initdata initenv
+install: cleanvar bootstrap initlog initdb syncdb initdata initenv
 
 update: clean cleanvirtualenv bootstrap syncdb initenv
 
 include build/Makefile.$(OS)
-
-linklibrary:
-	ln -sf $(LOCALPATH)/../auth_token/ $(LOCALPATH)/var/ve/lib/$(PYTHON)/site-packages/;
 

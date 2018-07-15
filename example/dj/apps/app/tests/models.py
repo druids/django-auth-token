@@ -1,13 +1,15 @@
 from datetime import timedelta
 
-from django.contrib.auth.models import User
 from django.utils import timezone
 
+from germanium.annotations import data_provider
 from germanium.test_cases.default import GermaniumTestCase
-from germanium.tools import assert_equal
+from germanium.tools import assert_equal, assert_true, assert_false
 
 from auth_token.models import Token
 from auth_token.config import settings
+
+from .base import BaseTestCaseMixin
 
 
 __all__ = (
@@ -15,10 +17,10 @@ __all__ = (
 )
 
 
-class TokenTestCase(GermaniumTestCase):
+class TokenTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
-    def test_should_return_proper_string_format_for_expiration(self):
-        user = User.objects._create_user('test', 'test@test.cz', 'test', is_staff=False, is_superuser=False)
+    @data_provider('create_user')
+    def test_should_return_proper_string_format_for_expiration(self, user):
         expired_token = Token.objects.create(user=user, ip='127.0.0.1')
         Token.objects.filter(pk=expired_token.pk).update(
             last_access=timezone.now() - timedelta(seconds=settings.MAX_TOKEN_AGE))

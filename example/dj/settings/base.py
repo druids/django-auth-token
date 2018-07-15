@@ -99,8 +99,10 @@ MIDDLEWARE = MIDDLEWARE_CLASSES = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'auth_token.middleware.TokenAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'is_core.middleware.RequestKwargsMiddleware',
+    'is_core.middleware.HTTPExceptionsMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -132,11 +134,21 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.humanize',
+    'django.contrib.admin',
 
     # apps
     'app',
 
     'auth_token',
+
+    # IS
+    'block_snippets',
+    'is_core',
+    'auth_token.contrib.is_core_auth',
+
+    # REST framework
+    'rest_framework',
+    'auth_token.contrib.rest_framework_auth',
 )
 
 # A sample logging configuration. The only tangible logging
@@ -201,3 +213,12 @@ TEMPLATES = [
         },
     },
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'auth_token.contrib.rest_framework_auth.authentication.AuthTokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}

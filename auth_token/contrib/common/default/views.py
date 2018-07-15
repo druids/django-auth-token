@@ -10,9 +10,13 @@ from auth_token.utils import login, logout
 class TokenLoginView(LoginView):
 
     form_class = TokenAuthenticationForm
+    allowed_cookie = True
+    allowed_header = False
 
     def _login(self, user, expiration, form):
-        login(self.request, user, expiration)
+        login(
+            self.request, user, expiration, allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
+        )
 
     def form_valid(self, form):
         """
@@ -24,8 +28,6 @@ class TokenLoginView(LoginView):
 
 
 class TokenLogoutView(LogoutView):
-
-    template_name = 'registration/logout.html'
 
     @method_decorator(never_cache)
     def dispatch(self, request, *args, **kwargs):
