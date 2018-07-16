@@ -18,6 +18,7 @@ DEFAULTS = {
     'RENEWAL_EXEMPT_HEADER': 'X-Authorization-Renewal-Exempt',  # Header name which causes that the token expiration
                                                                 # time will not be extended
     'EXPIRATION_HEADER': 'X-Authorization-Expiration',  # Header name which contains information about token expiration
+    'MAX_RANDOM_KEY_ITERATIONS': 100,  # Maximum iterations for random key generator
 }
 
 

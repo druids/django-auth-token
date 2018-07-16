@@ -103,3 +103,7 @@ Setup
 .. attribute:: AUTH_TOKEN_EXPIRATION_HEADER
 
   Header name which contains information about token expiration inside response. Default value is ``'X-Authorization-Expiration'``.
+
+.. attribute:: AUTH_TOKEN_MAX_RANDOM_KEY_ITERATIONS
+
+  Authorization token key is generated as random string. Because space of random strings is limited there can be collisions. Setting sets number of attempts to generate unique string. Default value is ``100``.

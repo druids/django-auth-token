@@ -5,6 +5,7 @@ from datetime import timedelta
 
 from django.conf import settings as django_settings
 from django.db import models
+from django.db.utils import IntegrityError
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
@@ -45,14 +46,27 @@ class Token(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.key:
-            self.key = self.generate_key()
-        return super(Token, self).save(*args, **kwargs)
+             self.key = self._generate_unique_key()
+        return super().save(*args, **kwargs)
 
-    def generate_key(self):
+    def _generate_key(self):
         """
         Random ID generating
         """
         return force_text(binascii.hexlify(os.urandom(20)))
+
+    def _generate_unique_key(self):
+        """
+        Generate random unique token key.
+        """
+        key = self._generate_key()
+        try_generator_iterations = 1
+        while self.__class__.objects.filter(key=key).exists():
+            if try_generator_iterations > settings.MAX_RANDOM_KEY_ITERATIONS:
+                raise IntegrityError('Could not produce unique key for authorization token')
+            try_generator_iterations += 1
+            key = self._generate_key()
+        return key
 
     def _get_token_age(self):
         return self.expiration and settings.DEFAULT_TOKEN_AGE or settings.MAX_TOKEN_AGE

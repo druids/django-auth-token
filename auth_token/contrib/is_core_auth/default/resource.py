@@ -58,5 +58,5 @@ class AuthResource(RESTResource):
 
     def has_delete_permission(self, **kwargs):
         return (
-            self.request.user.is_authenticated and super(AuthResource, self).has_delete_permission(**kwargs)
+            self.request.user.is_authenticated and super().has_delete_permission(**kwargs)
         )

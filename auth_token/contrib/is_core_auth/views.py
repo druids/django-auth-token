@@ -25,8 +25,8 @@ class UserTakeover(GetCoreObjViewMixin, DefaultCoreViewMixin, RedirectView):
 
     def get(self, request, *args, **kwargs):
         user = self.get_obj()
-        takeover(self.request, user)
-        return super(UserTakeover, self).get(request, *args, **kwargs)
+        takeover(request, user)
+        return super().get(request, *args, **kwargs)
 
     def has_get_permission(self, *args, **kwargs):
         return self.request.user.is_superuser
