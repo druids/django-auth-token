@@ -9,7 +9,7 @@ class AuthResource(DefaultAuthResource):
 
     @throttling(*LOGIN_THROTTLING_VALIDATORS)
     def post(self):
-        return super(AuthResource, self).post()
+        return super().post()
 
     def _sucessful_login(self, request):
         if getattr(self.request, 'input_logged_request', False):

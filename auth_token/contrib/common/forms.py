@@ -80,7 +80,7 @@ class AuthenticationCleanMixin:
 class TokenAuthenticationMixin(AuthenticationMixin):
 
     def __init__(self, *args, **kwargs):
-        super(TokenAuthenticationMixin, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.fields['permanent'] = forms.BooleanField(label=_('Remember user'), required=False)
 
     def is_permanent(self):
