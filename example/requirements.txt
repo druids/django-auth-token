@@ -3,7 +3,7 @@ django-germanium==2.0.5
 coverage==4.5.1
 selenium==3.11.0
 six==1.11.0
-django-is-core==2.16.0
+django-is-core==2.17.0
 djangorestframework==3.8.2
 freezegun==0.3.10
 -e ../
