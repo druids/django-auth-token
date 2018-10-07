@@ -3,6 +3,7 @@ from django.utils.translation import ugettext
 from pyston.response import RESTErrorResponse, RESTNoContentResponse
 from pyston.exception import RESTException
 
+from is_core.auth.permissions import AllowAny
 from is_core.rest.resource import RESTResource
 
 from auth_token.contrib.is_core_auth.forms import TokenAuthenticationSmartForm
@@ -11,7 +12,8 @@ from auth_token.utils import login, logout
 
 class AuthResource(RESTResource):
 
-    login_required = False
+    permission = AllowAny()
+
     allowed_methods = ('post', 'delete')
     form_class = TokenAuthenticationSmartForm
     allowed_cookie = False
