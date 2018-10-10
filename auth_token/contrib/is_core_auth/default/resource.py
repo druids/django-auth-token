@@ -14,6 +14,8 @@ class AuthResource(RESTResource):
 
     permission = AllowAny()
 
+    csrf_exempt = True
+
     allowed_methods = ('post', 'delete')
     form_class = TokenAuthenticationSmartForm
     allowed_cookie = False
