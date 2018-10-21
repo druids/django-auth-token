@@ -1,7 +1,6 @@
 from django.views.generic.base import RedirectView
 
-from is_core.generic_views import DefaultCoreViewMixin
-from is_core.generic_views.mixins import GetCoreObjViewMixin
+from is_core.generic_views.mixins import DefaultCoreViewMixin, CoreGetObjViewMixin
 
 from auth_token.config import settings
 from auth_token.contrib.common.views import LoginView as _LoginView, LogoutView as _LogoutView
@@ -18,7 +17,7 @@ class LogoutView(_LogoutView):
     template_name = 'is_core/logged_out.html'
 
 
-class UserTakeover(GetCoreObjViewMixin, DefaultCoreViewMixin, RedirectView):
+class UserTakeover(CoreGetObjViewMixin, DefaultCoreViewMixin, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         return settings.TAKEOVER_REDIRECT_URL
