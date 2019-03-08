@@ -34,3 +34,38 @@ class AuthTokenSerializer(serializers.Serializer):
 
         attrs['user'] = user
         return attrs
+
+
+class MobileAuthTokenSerializer(serializers.Serializer):
+
+    uuid = serializers.UUIDField(label=_('device UUID'))
+    login_device_token = serializers.CharField(
+        label=_('Device Token'),
+        style={'input_type': 'password'},
+        trim_whitespace=False
+    )
+
+    def validate(self, attrs):
+        uuid = attrs.get('uuid')
+        token = attrs.get('login_device_token')
+
+        if uuid and token:
+            # DeviceBackend is called here
+            user = authenticate(request=self.context.get('request'),
+                                device_uuid=uuid, mobile_login_token=token)
+
+            if not user:
+                raise serializers.ValidationError(
+                    _('Unable to log in with provided credentials.'),
+                    code='authorization')
+        else:
+            raise serializers.ValidationError(
+                _('Must include "uuid" and "token".'), code='authorization')
+
+        attrs['user'] = user
+        return attrs
+
+
+class MobileAuthTokenRegisterSerializer(serializers.Serializer):
+
+    uuid = serializers.UUIDField(label=_('device UUID'))
