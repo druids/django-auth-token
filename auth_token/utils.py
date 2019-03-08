@@ -1,15 +1,16 @@
+import binascii
+import os
 import re
 
-from django.middleware.csrf import rotate_token
-from django.contrib.auth import load_backend, _get_backends
-from django.contrib.auth.signals import user_logged_in, user_logged_out
-from django.contrib.auth.models import AnonymousUser
 from django.conf import settings as django_settings
-
-from ipware.ip import get_ip
+from django.contrib.auth import _get_backends, load_backend
+from django.contrib.auth.models import AnonymousUser
+from django.contrib.auth.signals import user_logged_in, user_logged_out
+from django.middleware.csrf import rotate_token
+from django.utils.encoding import force_text
 
 from auth_token.config import settings
-from auth_token.models import Token, AnonymousToken
+from ipware.ip import get_ip
 
 
 def header_name_to_django(header_name):
@@ -22,6 +23,7 @@ def login(request, user, expiration=True, auth_slug=None, related_objs=None, bac
     Persist token into database. Token is stored inside cookie therefore is not necessary
     reauthenticate user for every request.
     """
+    from auth_token.models import Token
     related_objs = related_objs if related_objs is not None else ()
 
     if user is None:
@@ -124,6 +126,7 @@ def get_token(request):
     Returns the token model instance associated with the given request token key.
     If no user is retrieved AnonymousToken is returned.
     """
+    from auth_token.models import AnonymousToken, Token
     auth_token, token_is_from_header, token_is_from_cookie = get_token_key_from_request(request)
 
     try:
@@ -174,3 +177,10 @@ def takeover(request, user):
         request.token.user_takeovers.update(is_active=False)
         request.token.user_takeovers.create(user=user, is_active=True)
         return True
+
+
+def generate_key(length=20):
+    """
+    Random ID generating of 'length' bytes
+    """
+    return force_text(binascii.hexlify(os.urandom(length)))

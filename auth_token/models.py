@@ -1,18 +1,16 @@
-import os
-import binascii
-
 from datetime import timedelta
 
 from django.conf import settings as django_settings
-from django.db import models
-from django.db.utils import IntegrityError
+from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.db import models
+from django.db.utils import IntegrityError
 from django.utils import timezone
-from django.utils.encoding import force_text
 
 from auth_token.config import settings
+from auth_token.utils import generate_key
 
 
 class Token(models.Model):
@@ -49,23 +47,17 @@ class Token(models.Model):
              self.key = self._generate_unique_key()
         return super().save(*args, **kwargs)
 
-    def _generate_key(self):
-        """
-        Random ID generating
-        """
-        return force_text(binascii.hexlify(os.urandom(20)))
-
     def _generate_unique_key(self):
         """
         Generate random unique token key.
         """
-        key = self._generate_key()
+        key = generate_key()
         try_generator_iterations = 1
         while self.__class__.objects.filter(key=key).exists():
             if try_generator_iterations > settings.MAX_RANDOM_KEY_ITERATIONS:
                 raise IntegrityError('Could not produce unique key for authorization token')
             try_generator_iterations += 1
-            key = self._generate_key()
+            key = generate_key()
         return key
 
     def _get_token_age(self):
@@ -129,3 +121,46 @@ class AnonymousToken:
 
     def delete(self):
         raise NotImplementedError
+
+
+class DeviceKeyQuerySet(models.QuerySet):
+
+    def get_or_create_token(self, uuid, user, user_agent=''):
+        """
+        This method must be called when user is authenticated.
+        It creates a new DeviceKey for the device and returns it.
+        If DeviceKey for the same UUID, device ID
+        and user already exists then it remain as it is and None is returned.
+        """
+        token = generate_key(length=64)
+        return token, self.get_or_create(
+            uuid=uuid, is_active=True, user=user,
+            defaults={
+                'login_token': make_password(token),
+                'user_agent': user_agent[:256],
+            }
+        )[1]
+
+
+class DeviceKey(models.Model):
+    """Model used to authenticate mobile devices. Unhashed login_token is stored
+    in the device keychain and serve as password to log in together with UUID via DeviceBackend."""
+
+    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False)
+    uuid = models.UUIDField(unique=True)
+    last_login = models.DateTimeField(null=True, blank=True)
+    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    login_token = models.CharField(max_length=128)
+    is_active = models.BooleanField(default=True)
+    user_agent = models.CharField(max_length=256, null=True, blank=True)
+
+    class Meta:
+        unique_together = ('uuid', 'user')
+
+    objects = DeviceKeyQuerySet.as_manager()
+
+    def __str__(self):
+        return '{}, {}'.format(self.uuid, self.user)
+
+    def check_password(self, token):
+        return check_password(token, self.login_token)
