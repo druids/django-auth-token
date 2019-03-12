@@ -93,3 +93,46 @@ Auth Token
 .. class:: auth_token.models.AnonymousToken
 
   ``AnonymousToken`` has save purpose as Django ``AnonymousUser``. If you are using auth_token middleware, the request contains token (``request.token``). If token is not found the ``AnonymousToken`` is set to the request.
+
+
+Device Authentication
+---------------------
+
+.. class:: auth_token.models.DeviceKey
+
+  Model storing keys of registered mobile devices.
+
+  .. attribute:: uuid
+
+    ``UUIDField``, contains UUID of registered device
+
+  .. attribute:: last_login
+
+    ``DateTimeField``, holds the time and date of the last login using this key
+
+  .. attribute:: user
+
+    ``ForeignKey``, user object implementing ``django.contrib.auth.base_user.AbstractBaseUser``
+
+  .. attribute:: login_token
+
+    ``CharField``, hashed generated token used as a password
+
+  .. attribute:: is_active
+
+    ``BooleanField``, keys having this flag set to ``False`` will be ignored during user login
+
+  .. attribute:: user_agent
+
+    ``CharField``, additional information of the device
+
+
+.. class:: auth_token.models.DeviceKeyQuerySet
+
+  This class is the objects manager of ``auth_token.models.DeviceKey`` model
+
+  .. py:method:: get_or_create_token(self, uuid, user, user_agent='')
+
+    * ``uuid`` - ``uuid.UUID`` object from standard Python library
+    * ``user`` - user object implementing ``django.contrib.auth.base_user.AbstractBaseUser`` class
+    * ``user_agent`` - str object with additional information about the device, could be just ``HTTP_USER_AGENT`` entry of META field from the ``request``.

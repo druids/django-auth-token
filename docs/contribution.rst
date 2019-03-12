@@ -62,3 +62,14 @@ Next you can add login and logout views to your URL config::
         path('login/', LoginAuthToken.as_view()),
         path('logout/', LogoutAuthToken.as_view()),
     ]
+
+
+To support login with mobile token in your application update your urlpatterns with ``mobile-login`` path::
+
+    from auth_token.contrib.rest_framework_auth.views import MobileLoginAuthToken
+    ...
+
+    urlpatterns = [
+        ...
+        path('mobile-login/', MobileLoginAuthToken.as_view()),
+    ]

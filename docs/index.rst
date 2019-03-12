@@ -22,5 +22,6 @@ Content
    installation
    commands
    models
+   backends
    helpers
    contribution
