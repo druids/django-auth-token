@@ -8,6 +8,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.utils import IntegrityError
 from django.utils import timezone
+from django.utils.translation import ugettext as _
+from django.utils.translation import ugettext_lazy as _l
 
 from auth_token.config import settings
 from auth_token.utils import generate_key
@@ -146,16 +148,18 @@ class DeviceKey(models.Model):
     """Model used to authenticate mobile devices. Unhashed login_token is stored
     in the device keychain and serve as password to log in together with UUID via DeviceBackend."""
 
-    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False)
-    uuid = models.UUIDField(unique=True)
-    last_login = models.DateTimeField(null=True, blank=True)
-    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-    login_token = models.CharField(max_length=128)
-    is_active = models.BooleanField(default=True)
-    user_agent = models.CharField(max_length=256, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False, verbose_name=_('created at'))
+    uuid = models.UUIDField(unique=True, verbose_name=_('UUID'))
+    last_login = models.DateTimeField(null=True, blank=True, verbose_name=_('last login'))
+    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name=_('user'))
+    login_token = models.CharField(max_length=128, verbose_name=_('login token'))
+    is_active = models.BooleanField(default=True, verbose_name=_('is active'))
+    user_agent = models.CharField(max_length=256, null=True, blank=True, verbose_name=_('user agent'))
 
     class Meta:
         unique_together = ('uuid', 'user')
+        verbose_name = _l('device key')
+        verbose_name_plural = _l('device keys')
 
     objects = DeviceKeyQuerySet.as_manager()
 
