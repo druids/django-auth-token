@@ -152,14 +152,14 @@ class DeviceKey(models.Model):
     uuid = models.UUIDField(unique=True, verbose_name=_('UUID'))
     last_login = models.DateTimeField(null=True, blank=True, verbose_name=_('last login'))
     user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name=_('user'))
-    login_token = models.CharField(max_length=128, verbose_name=_('login_token'))
+    login_token = models.CharField(max_length=128, verbose_name=_('login token'))
     is_active = models.BooleanField(default=True, verbose_name=_('is active'))
     user_agent = models.CharField(max_length=256, null=True, blank=True, verbose_name=_('user agent'))
 
     class Meta:
         unique_together = ('uuid', 'user')
-        verbose_name = _l('Personal data request')
-        verbose_name_plural = _l('Personal data requests')
+        verbose_name = _l('device key')
+        verbose_name_plural = _l('device keys')
 
     objects = DeviceKeyQuerySet.as_manager()
 

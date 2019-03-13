@@ -15,37 +15,37 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AlterModelOptions(
             name='devicekey',
-            options={'verbose_name': 'Personal data request',
-                     'verbose_name_plural': 'Personal data requests'},
+            options={'verbose_name': 'device key',
+                     'verbose_name_plural': 'device keys'},
         ),
         migrations.AlterField(
             model_name='devicekey',
             name='created_at',
             field=models.DateTimeField(auto_now_add=True,
-                                       verbose_name='vytvořeno dne'),
+                                       verbose_name='created at'),
         ),
         migrations.AlterField(
             model_name='devicekey',
             name='is_active',
-            field=models.BooleanField(default=True, verbose_name='aktivní?'),
+            field=models.BooleanField(default=True, verbose_name='is active'),
         ),
         migrations.AlterField(
             model_name='devicekey',
             name='last_login',
             field=models.DateTimeField(blank=True, null=True,
-                                       verbose_name='poslední přihlášení'),
+                                       verbose_name='last login'),
         ),
         migrations.AlterField(
             model_name='devicekey',
             name='login_token',
-            field=models.CharField(max_length=128, verbose_name='login_token'),
+            field=models.CharField(max_length=128, verbose_name='login token'),
         ),
         migrations.AlterField(
             model_name='devicekey',
             name='user',
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                to=settings.AUTH_USER_MODEL, verbose_name='uživatel'),
+                to=settings.AUTH_USER_MODEL, verbose_name='user'),
         ),
         migrations.AlterField(
             model_name='devicekey',
