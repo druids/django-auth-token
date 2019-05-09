@@ -104,7 +104,7 @@ Device Authentication
 
   .. attribute:: uuid
 
-    ``UUIDField``, contains UUID of registered device
+    ``CharField``, contains UUID of registered device (it's not valid UUID in terms of length, any length up to 32 characters is accepted as valid)
 
   .. attribute:: last_login
 

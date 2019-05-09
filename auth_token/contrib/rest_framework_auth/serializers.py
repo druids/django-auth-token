@@ -38,7 +38,7 @@ class AuthTokenSerializer(serializers.Serializer):
 
 class MobileAuthTokenSerializer(serializers.Serializer):
 
-    uuid = serializers.UUIDField(label=_('device UUID'))
+    uuid = serializers.CharField(label=_('device UUID'))
     login_device_token = serializers.CharField(
         label=_('Device Token'),
         style={'input_type': 'password'},
@@ -68,4 +68,4 @@ class MobileAuthTokenSerializer(serializers.Serializer):
 
 class MobileAuthTokenRegisterSerializer(serializers.Serializer):
 
-    uuid = serializers.UUIDField(label=_('device UUID'))
+    uuid = serializers.CharField(label=_('device UUID'))

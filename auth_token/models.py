@@ -149,7 +149,8 @@ class DeviceKey(models.Model):
     in the device keychain and serve as password to log in together with UUID via DeviceBackend."""
 
     created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False, verbose_name=_('created at'))
-    uuid = models.UUIDField(unique=True, verbose_name=_('UUID'))
+    # this is not UUIDField because of the strict length limitation
+    uuid = models.CharField(unique=True, verbose_name=_('UUID'), max_length=32)
     last_login = models.DateTimeField(null=True, blank=True, verbose_name=_('last login'))
     user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name=_('user'))
     login_token = models.CharField(max_length=128, verbose_name=_('login token'))
@@ -168,3 +169,4 @@ class DeviceKey(models.Model):
 
     def check_password(self, token):
         return check_password(token, self.login_token)
+
