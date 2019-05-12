@@ -9,10 +9,12 @@ from .base import BaseTestCaseMixin
 
 
 __all__ = (
-   'RESTFrameworkLoginISCoreTestCase',
+    'RESTFrameworkLoginISCoreTestCase',
+    'DeviceKeyTestCase'
 )
 
-UUID = 'E621E1F8-C36C-495A-93FC-0C247A3E6E5F'
+UUID = 'E621E1F8C36C495A93FC0C247A3E6E5F'
+SHORTER_UUID = 'E621E1F8C36C495'
 INDEX_URL = '/api/'
 API_LOGIN_URL = '/api/login/'
 
@@ -71,6 +73,14 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
         assert_not_in('Authorization', self.c.cookies)
         assert_true(Token.objects.last().allowed_header)
         assert_false(Token.objects.last().allowed_cookie)
+
+    @data_provider('create_user')
+    def test_user_should_be_authorized_from_token_and_shorter_uuid(self, user):
+
+        device_token = DeviceKey.objects.get_or_create_token(uuid=SHORTER_UUID, user=user)[0]
+        resp = self.post(self.API_MOBILE_LOGIN_URL,
+                         {'uuid': SHORTER_UUID, 'login_device_token': device_token})
+        assert_http_ok(resp)
 
     @data_provider('create_user')
     def test_user_should_get_token_when_device_registered_by_uuid(self, user):
