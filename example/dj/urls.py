@@ -6,6 +6,7 @@ from django.urls import path
 from app.resource import SimpleAPI
 from auth_token.contrib.admin.views import LoginView as AdminLoginView
 from auth_token.contrib.admin.views import LogoutView as AdminLogoutView
+from auth_token.contrib.is_core_auth.views import LoginCodeVerificationView, TwoFactorLoginView
 from auth_token.contrib.rest_framework_auth.views import LoginView as RESTFrameworkLoginView
 from auth_token.contrib.rest_framework_auth.views import LogoutView as RESTFrameworkLogoutView
 from auth_token.contrib.rest_framework_auth.views import (
@@ -19,6 +20,8 @@ admin.site.logout = AdminLogoutView.as_view()
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('is_core/', include(is_core_site.urls)),
+    path('two-factor-login/', TwoFactorLoginView.as_view()),
+    path('login-code-verification/', LoginCodeVerificationView.as_view()),
     path('api/login/', LoginAuthToken.as_view()),
     path('api/logout/', LogoutAuthToken.as_view()),
     path('api/mobile-login/', MobileLoginAuthToken.as_view()),

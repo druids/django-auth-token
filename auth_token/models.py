@@ -20,6 +20,9 @@ class Token(models.Model):
     The default authorization token model.
     """
 
+    TWO_FACTOR_CODE_LENGTH = 5
+    TWO_FACTOR_CODE_SALT = 'two-factor'
+
     key = models.CharField(max_length=40, primary_key=True, null=False, blank=False)
     user = models.ForeignKey(django_settings.AUTH_USER_MODEL, related_name='auth_token', null=False, blank=False,
                              on_delete=models.CASCADE)
@@ -36,6 +39,8 @@ class Token(models.Model):
     backend = models.CharField(max_length=255, null=False, blank=False)
     allowed_cookie = models.BooleanField(default=True)
     allowed_header = models.BooleanField(default=True)
+    is_authenticated = models.BooleanField(null=False, blank=False, default=False)
+    two_factor_code = models.CharField(null=True, blank=True, max_length=128)
 
     is_from_header = False
     is_from_cookie = False

@@ -1,5 +1,6 @@
 import binascii
 import os
+import random
 import re
 
 from django.conf import settings as django_settings
@@ -17,8 +18,12 @@ def header_name_to_django(header_name):
     return '_'.join(('HTTP', header_name.replace('-', '_').upper()))
 
 
+def generate_two_factor_code(length):
+    return ''.join([str(random.randint(0, 9)) for _ in range(length)])
+
+
 def login(request, user, expiration=True, auth_slug=None, related_objs=None, backend=None, allowed_cookie=True,
-          allowed_header=True):
+          allowed_header=True, two_factor_login=False):
     """
     Persist token into database. Token is stored inside cookie therefore is not necessary
     reauthenticate user for every request.
@@ -44,11 +49,12 @@ def login(request, user, expiration=True, auth_slug=None, related_objs=None, bac
 
     token = Token.objects.create(user=user, user_agent=request.META.get('HTTP_USER_AGENT', '')[:256],
                                  expiration=expiration, auth_slug=auth_slug, ip=get_ip(request),
-                                 backend=backend, allowed_cookie=allowed_cookie, allowed_header=allowed_header)
+                                 backend=backend, allowed_cookie=allowed_cookie, allowed_header=allowed_header,
+                                 is_authenticated=not two_factor_login)
 
     for related_obj in related_objs:
         token.related_objects.create(content_object=related_obj)
-    if hasattr(request, 'user'):
+    if hasattr(request, 'user') and token.is_authenticated:
         request.user = user
     request.token = token
     rotate_token(request)
@@ -154,7 +160,11 @@ def dont_enforce_csrf_checks(request):
 def get_user_from_token(token):
     if token:
         backend_path = token.backend
-        if backend_path in django_settings.AUTHENTICATION_BACKENDS:
+        if (backend_path in django_settings.AUTHENTICATION_BACKENDS and (
+                not settings.TWO_FACTOR_ENABLED or (
+                        hasattr(token, 'is_authenticated') and token.is_authenticated
+                )
+        )):
             active_takeover_id = token.active_takeover.user.pk if token.active_takeover else None
             user_id = token.user.pk
             backend = load_backend(backend_path)

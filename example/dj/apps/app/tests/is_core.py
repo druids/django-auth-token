@@ -1,20 +1,23 @@
 from datetime import timedelta
+from unittest.mock import patch
 
+from django.contrib.auth.hashers import make_password
 from django.test import override_settings
 from django.utils import timezone
+from django.utils.translation import ugettext as _
+from nose.tools import assert_equal
 
-from germanium.annotations import data_provider
-from germanium.test_cases.rest import RESTTestCase
-from germanium.test_cases.client import ClientTestCase
-from germanium.tools.http import assert_http_ok, assert_http_redirect, assert_http_accepted
-from germanium.tools import assert_true, assert_false, assert_in, assert_not_in
-
-from freezegun import freeze_time
-
+from auth_token.config import settings
 from auth_token.models import Token
+from freezegun import freeze_time
+from germanium.annotations import data_provider
+from germanium.test_cases.client import ClientTestCase
+from germanium.test_cases.rest import RESTTestCase
+from germanium.tools import assert_false, assert_in, assert_not_in, assert_true
+from germanium.tools.http import (assert_http_accepted, assert_http_ok,
+                                  assert_http_redirect)
 
 from .base import BaseTestCaseMixin
-
 
 __all__ = (
    'RESTLoginISCoreTestCase',
@@ -158,11 +161,17 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
         )
 
 
+def send_two_factor_token(token, code):
+    pass
+
+
 class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
 
     INDEX_URL = '/is_core/'
     UI_LOGIN_URL = '/is_core/login/'
     UI_LOGOUT_URL = '/is_core/logout/'
+    UI_TWO_FACTOR_LOGIN_URL = '/two-factor-login/'
+    UI_CODE_CHECK_LOGIN_URL = '/login-code-verification/'
 
     @data_provider('create_user')
     def test_user_should_be_authorized_via_cookie(self, user):
@@ -205,3 +214,61 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         assert_http_ok(self.get(self.INDEX_URL))
         assert_http_ok(self.get(self.UI_LOGOUT_URL))
         assert_http_redirect(self.get(self.INDEX_URL))
+
+    @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
+    @override_settings(AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.send_two_factor_token')
+    @data_provider('create_user')
+    def test_user_should_be_authorized_with_two_factor_authentication(self, user):
+        login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
+
+        assert_http_redirect(login_resp)
+        resp_location = login_resp['Location']
+        assert_equal(resp_location[:resp_location.find('?')], settings.TWO_FACTOR_REDIRECT_URL)
+        assert_false(login_resp.wsgi_request.user.is_authenticated)
+
+        token = login_resp.wsgi_request.token
+        assert_true(token.two_factor_code is not None)
+        assert_false(token.is_authenticated)
+        # the code value needs to be overwritted, so that its value could be used for next request
+        token.two_factor_code = make_password('12345', salt=Token.TWO_FACTOR_CODE_SALT)
+        token.save()
+
+        code_check_resp = self.post(self.UI_CODE_CHECK_LOGIN_URL, {'code': '12345'})
+
+        assert_http_redirect(code_check_resp)
+        assert_equal(code_check_resp['location'], '/accounts/profile/')
+        assert_true(code_check_resp.wsgi_request.token.is_authenticated)
+        assert_true(code_check_resp.wsgi_request.user.is_authenticated)
+        assert_equal(code_check_resp.wsgi_request.user, user)
+
+    @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
+    @override_settings(AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.send_two_factor_token')
+    @patch('app.tests.is_core.send_two_factor_token')
+    @patch('auth_token.contrib.is_core_auth.views.generate_two_factor_code')
+    def test_send_two_factor_token_should_be_called_for_two_factor_login(self, generate_two_factor_code, send_two_factor_token):
+        generate_two_factor_code.return_value = '12345'
+        self.create_user()
+        login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
+
+        assert_http_redirect(login_resp)
+        send_two_factor_token.assert_called_once_with(login_resp.wsgi_request.token, '12345')
+
+    @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
+    @override_settings(AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.send_two_factor_token')
+    @data_provider('create_user')
+    def test_user_should_not_be_logged_in_two_factor_for_invalid_code(self, user):
+        login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
+
+        assert_http_redirect(login_resp)
+        # the code value needs to be overwritten, so that its value could be used for next request
+        login_resp.wsgi_request.token.two_factor_code = make_password('12345', salt=Token.TWO_FACTOR_CODE_SALT)
+        login_resp.wsgi_request.token.save()
+
+        code_check_resp = self.post(self.UI_CODE_CHECK_LOGIN_URL, {'code': 'other_code'})
+
+        assert_http_ok(code_check_resp)
+        assert_in(
+            _('The inserted value does not correspond to the sent code.'),
+            code_check_resp._container[0].decode('utf8')
+        )
+        assert_false(code_check_resp.wsgi_request.token.is_authenticated)

@@ -25,6 +25,7 @@ setup(
     ],
     install_requires=[
         'django>=1.11',
+        'import_string==0.1.0',
     ],
     zip_safe=False
 )
