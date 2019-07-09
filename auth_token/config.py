@@ -15,6 +15,11 @@ DEFAULTS = {
     'MAX_TOKEN_AGE': 60 * 60 * 24 * 7 * 2,  # Max token expiration time (default: 2 weeks)
     'COUNT_USER_PRESERVED_TOKENS': 20,  # Maximum tokens that will be preserved per user
     'TAKEOVER_REDIRECT_URL': '/',  # The path where will be used after takeover another user token
+    'TWO_FACTOR_ENABLED': False,  # Two factor authentication is disabled
+    'TWO_FACTOR_REDIRECT_URL': 'login-code-verification/',  # The path the user is redirected to after successful two
+                                                            # factor authentication
+    'TWO_FACTOR_SENDING_FUNCTION': '',  # Function, which need to be implemented to send the key for second part of
+                                        # authorization process to the user
     'RENEWAL_EXEMPT_HEADER': 'X-Authorization-Renewal-Exempt',  # Header name which causes that the token expiration
                                                                 # time will not be extended
     'EXPIRATION_HEADER': 'X-Authorization-Expiration',  # Header name which contains information about token expiration

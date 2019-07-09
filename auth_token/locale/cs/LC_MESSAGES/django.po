@@ -1,0 +1,114 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2019-07-08 12:24+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
+
+#: contrib/common/forms.py:14
+#, python-format
+msgid ""
+"Please enter a correct %(username)s and password. Note that both fields may "
+"be case-sensitive."
+msgstr ""
+"Vložte prosím správné %(username)s a heslo. Obě pole rozlišují velká a "
+"malá písmena."
+
+#: contrib/common/forms.py:16
+msgid "This account is inactive."
+msgstr "Tento účet je neaktivní."
+
+#: contrib/common/forms.py:37 contrib/rest_framework_auth/serializers.py:11
+msgid "Password"
+msgstr "Heslo"
+
+#: contrib/common/forms.py:84
+msgid "Remember user"
+msgstr "Zapamatovat uživatele"
+
+#: contrib/is_core_auth/default/resource.py:41
+msgid "Missing data"
+msgstr "Chybějící údaje"
+
+#: contrib/is_core_auth/forms.py:16
+msgid "code"
+msgstr ""
+
+#: contrib/is_core_auth/forms.py:28
+msgid "The inserted value does not correspond to the sent code."
+msgstr "Vložená hodnota neodpovídá zaslanému kódu."
+
+#: contrib/rest_framework_auth/authentication.py:24
+msgid "Invalid authorization token."
+msgstr "Neplatný autorizační kód."
+
+#: contrib/rest_framework_auth/serializers.py:9
+msgid "Username"
+msgstr "Uživatelské jméno"
+
+#: contrib/rest_framework_auth/serializers.py:15
+msgid "Permanent"
+msgstr "Zapamatovat uživatele"
+
+#: contrib/rest_framework_auth/serializers.py:29
+#: contrib/rest_framework_auth/serializers.py:59
+msgid "Unable to log in with provided credentials."
+msgstr "Pro zadané údaje není možné uživatele přihlásit."
+
+#: contrib/rest_framework_auth/serializers.py:32
+msgid "Must include \"username\" and \"password\"."
+msgstr "Musí obsahovat \"uživatelské jméno\" a \"heslo\"."
+
+#: contrib/rest_framework_auth/serializers.py:41
+#: contrib/rest_framework_auth/serializers.py:71
+msgid "device UUID"
+msgstr "UUID zařízení"
+
+#: contrib/rest_framework_auth/serializers.py:43
+msgid "Device Token"
+msgstr "Kód zařízení"
+
+#: contrib/rest_framework_auth/serializers.py:63
+msgid "Must include \"uuid\" and \"token\"."
+msgstr "Musí obsahovat \"uuid\" a \"kód\"."
+
+#: models.py:156
+msgid "created at"
+msgstr "vytvořeno"
+
+#: models.py:158
+msgid "UUID"
+msgstr "UUID"
+
+#: models.py:159
+msgid "last login"
+msgstr "poslední přihlášení"
+
+#: models.py:160
+msgid "user"
+msgstr "uživatel"
+
+#: models.py:161
+msgid "login token"
+msgstr "přihlašovací token"
+
+#: models.py:162
+msgid "is active"
+msgstr "je aktivní"
+
+#: models.py:163
+msgid "user agent"
+msgstr "user agent"
