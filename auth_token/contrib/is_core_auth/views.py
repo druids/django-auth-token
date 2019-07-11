@@ -1,7 +1,6 @@
 from django import forms
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password
-from django.contrib.auth.views import LoginView as DjangoLoginView
 from django.core.exceptions import ValidationError
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
@@ -11,6 +10,7 @@ import import_string
 from auth_token.config import settings
 from auth_token.contrib.common.views import LoginView as _LoginView
 from auth_token.contrib.common.views import LogoutView as _LogoutView
+from auth_token.contrib.common.views import LoginCodeVerificationView as _LoginCodeVerificationView
 from auth_token.contrib.is_core_auth.forms import LoginCodeVerificationForm
 from auth_token.models import Token
 from auth_token.utils import generate_two_factor_code, login, takeover
@@ -74,11 +74,16 @@ class UserTakeover(GetCoreObjViewMixin, DefaultCoreViewMixin, RedirectView):
         return super().get(request, *args, **kwargs)
 
 
-class LoginCodeVerificationView(DjangoLoginView):
+class LoginCodeVerificationView(_LoginCodeVerificationView):
 
     template_name = 'is_core/login.html'
     form_class = LoginCodeVerificationForm
 
     def form_valid(self, form):
+        self.log_successful_request()
         auth_login(self.request, form.get_user(), self.request.token.backend)
         return HttpResponseRedirect(self.get_success_url())
+
+    def form_invalid(self, form):
+        self.log_unsuccessful_request()
+        return super().form_invalid(form)
