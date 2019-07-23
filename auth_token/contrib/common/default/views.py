@@ -37,3 +37,12 @@ class TokenLogoutView(LogoutView):
             # Redirect to this page until the session has been cleared.
             return HttpResponseRedirect(next_page)
         return super(LogoutView, self).dispatch(request, *args, **kwargs)
+
+
+class InputLogMixin:
+
+    def log_successful_request(self):
+        pass
+
+    def log_unsuccessful_request(self):
+        pass

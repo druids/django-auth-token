@@ -245,7 +245,8 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     @override_settings(AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.send_two_factor_token')
     @patch('app.tests.is_core.send_two_factor_token')
     @patch('auth_token.contrib.is_core_auth.views.generate_two_factor_code')
-    def test_send_two_factor_token_should_be_called_for_two_factor_login(self, generate_two_factor_code, send_two_factor_token):
+    def test_send_two_factor_token_should_be_called_for_two_factor_login(
+            self, generate_two_factor_code, send_two_factor_token):
         generate_two_factor_code.return_value = '12345'
         self.create_user()
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})

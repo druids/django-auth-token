@@ -1,7 +1,10 @@
 from django.core.exceptions import ImproperlyConfigured
 
 from security.utils import get_throttling_validators
-from security.throttling import UnsuccessfulLoginThrottlingValidator, SuccessfulLoginThrottlingValidator
+from security.throttling import (
+    SuccessfulLoginThrottlingValidator, SuccessfulTwoFactorCodeVerificationThrottlingValidator,
+    UnsuccessfulLoginThrottlingValidator, UnSuccessfulTwoFactorCodeVerificationThrottlingValidator
+)
 
 
 try:
@@ -12,4 +15,8 @@ except ImproperlyConfigured:
         UnsuccessfulLoginThrottlingValidator(10 * 60, 10),
         SuccessfulLoginThrottlingValidator(60, 2),
         SuccessfulLoginThrottlingValidator(10 * 60, 10),
+        UnSuccessfulTwoFactorCodeVerificationThrottlingValidator(60, 2),
+        UnSuccessfulTwoFactorCodeVerificationThrottlingValidator(10 * 60, 10),
+        SuccessfulTwoFactorCodeVerificationThrottlingValidator(60, 2),
+        SuccessfulTwoFactorCodeVerificationThrottlingValidator(10 * 60, 10),
     )
