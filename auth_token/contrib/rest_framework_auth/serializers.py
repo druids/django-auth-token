@@ -1,5 +1,7 @@
 from django.utils.translation import ugettext_lazy as _
 
+from auth_token.models import DeviceKey, DeviceKeyAlreadyExistsException
+
 from rest_framework import serializers
 from rest_framework.compat import authenticate
 
@@ -69,3 +71,12 @@ class MobileAuthTokenSerializer(serializers.Serializer):
 class MobileAuthTokenRegisterSerializer(serializers.Serializer):
 
     uuid = serializers.CharField(label=_('device UUID'))
+
+    def validate(self, attrs):
+        uuid = attrs.get('uuid')
+        try:
+            attrs['token'] = DeviceKey.objects.create_token(uuid=uuid, user=self.context['request'].user)
+        except DeviceKeyAlreadyExistsException:
+            raise serializers.ValidationError(
+                _('Device key was already registered.'), code='registration')
+        return attrs
