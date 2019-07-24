@@ -8,8 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.db.utils import IntegrityError
 from django.utils import timezone
-from django.utils.translation import ugettext as _
-from django.utils.translation import ugettext_lazy as _l
+from django.utils.translation import ugettext_lazy as _
 
 from auth_token.config import settings
 from auth_token.utils import generate_key
@@ -130,23 +129,31 @@ class AnonymousToken:
         raise NotImplementedError
 
 
+class DeviceKeyAlreadyExistsException(Exception):
+    pass
+
+
 class DeviceKeyQuerySet(models.QuerySet):
 
-    def get_or_create_token(self, uuid, user, user_agent=''):
+    def create_token(self, uuid, user, user_agent=''):
         """
         This method must be called when user is authenticated.
-        It creates a new DeviceKey for the device and returns it.
-        If DeviceKey for the same UUID, device ID
-        and user already exists then it remain as it is and None is returned.
+        It creates a new DeviceKey with auto generated token for the device and returns token.
+        If DeviceKey with same UUID exists DeviceKeyAlreadyExistsException is raised.
         """
         token = generate_key(length=64)
-        return token, self.get_or_create(
-            uuid=uuid, is_active=True, user=user,
+        is_created_new_device_key = self.get_or_create(
+            uuid=uuid, user=user,
             defaults={
                 'login_token': make_password(token),
                 'user_agent': user_agent[:256],
+                'is_active': True
             }
         )[1]
+        if is_created_new_device_key:
+            return token
+        else:
+            raise DeviceKeyAlreadyExistsException('Device key already exists')
 
 
 class DeviceKey(models.Model):
@@ -155,7 +162,7 @@ class DeviceKey(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False, verbose_name=_('created at'))
     # this is not UUIDField because of the strict length limitation
-    uuid = models.CharField(unique=True, verbose_name=_('UUID'), max_length=32)
+    uuid = models.CharField(verbose_name=_('UUID'), max_length=32)
     last_login = models.DateTimeField(null=True, blank=True, verbose_name=_('last login'))
     user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name=_('user'))
     login_token = models.CharField(max_length=128, verbose_name=_('login token'))
@@ -164,8 +171,8 @@ class DeviceKey(models.Model):
 
     class Meta:
         unique_together = ('uuid', 'user')
-        verbose_name = _l('device key')
-        verbose_name_plural = _l('device keys')
+        verbose_name = _('device key')
+        verbose_name_plural = _('device keys')
 
     objects = DeviceKeyQuerySet.as_manager()
 
@@ -174,4 +181,3 @@ class DeviceKey(models.Model):
 
     def check_password(self, token):
         return check_password(token, self.login_token)
-

@@ -1,6 +1,5 @@
 from auth_token.contrib.common.views import LoginView as _LoginView
 from auth_token.contrib.common.views import LogoutView as _LogoutView
-from auth_token.models import DeviceKey
 from auth_token.utils import login, logout
 from rest_framework.compat import coreapi, coreschema
 from rest_framework.response import Response
@@ -144,10 +143,7 @@ class MobileRegisterToken(APIView):
         serializer = self.serializer_class(data=request.data,
                                            context={'request': request})
         serializer.is_valid(raise_exception=True)
-        uuid = serializer.validated_data['uuid']
-        device_token = DeviceKey.objects.get_or_create_token(uuid=uuid, user=request.user)[0]
-
-        return Response({'device_login_token': device_token})
+        return Response({'device_login_token': serializer.validated_data['token']})
 
 
 class LoginView(_LoginView):

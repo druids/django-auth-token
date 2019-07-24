@@ -1,6 +1,6 @@
 from germanium.annotations import data_provider
 from germanium.test_cases.rest import RESTTestCase
-from germanium.tools.http import assert_http_ok, assert_http_unauthorized, assert_http_accepted
+from germanium.tools.http import assert_http_ok, assert_http_unauthorized, assert_http_accepted, assert_http_bad_request
 from germanium.tools import assert_true, assert_false, assert_in, assert_not_in, assert_equal
 
 from auth_token.models import Token, DeviceKey
@@ -59,8 +59,7 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
 
     @data_provider('create_user')
     def test_user_should_be_authorized_from_token_and_uuid(self, user):
-
-        device_token = DeviceKey.objects.get_or_create_token(uuid=UUID, user=user)[0]
+        device_token = DeviceKey.objects.create_token(uuid=UUID, user=user)
         resp = self.post(self.API_MOBILE_LOGIN_URL,
                          {'uuid': UUID, 'login_device_token': device_token})
         assert_http_ok(resp)
@@ -77,7 +76,7 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
     @data_provider('create_user')
     def test_user_should_be_authorized_from_token_and_shorter_uuid(self, user):
 
-        device_token = DeviceKey.objects.get_or_create_token(uuid=SHORTER_UUID, user=user)[0]
+        device_token = DeviceKey.objects.create_token(uuid=SHORTER_UUID, user=user)
         resp = self.post(self.API_MOBILE_LOGIN_URL,
                          {'uuid': SHORTER_UUID, 'login_device_token': device_token})
         assert_http_ok(resp)
@@ -95,3 +94,32 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
         device_key = device_keys[0]
         assert_true(device_key.check_password(mobile_token))
         assert_false(device_key.check_password('XXX'))
+
+    @data_provider('create_user')
+    def test_user_should_not_register_same_device_keys(self, user):
+        logged_in_resp = self.post(API_LOGIN_URL, {'username': 'test', 'password': 'test'})
+        registration_mobile_resp = self.post(self.API_REQUEST_MOBILE_TOKEN_URL, headers={
+            'HTTP_AUTHORIZATION': 'Bearer {}'.format(
+                logged_in_resp.json()['token'])}, data={'uuid': UUID})
+        assert_http_ok(registration_mobile_resp)
+        registration_mobile_resp = self.post(self.API_REQUEST_MOBILE_TOKEN_URL, headers={
+            'HTTP_AUTHORIZATION': 'Bearer {}'.format(
+                logged_in_resp.json()['token'])}, data={'uuid': UUID})
+        assert_http_bad_request(registration_mobile_resp)
+
+    def create_users(self):
+        return [
+            (i, self.create_user('test{}'.format(i), 'test{}@test.cz'.format(i), 'test{}'.format(i))) for i in range(5)
+        ]
+
+    @data_provider('create_users')
+    def test_different_users_should_register_and_authorize_with_same_device_keys(self, i, user):
+        logged_in_resp = self.post(API_LOGIN_URL, {'username': 'test{}'.format(i), 'password': 'test{}'.format(i)})
+        registration_mobile_resp = self.post(self.API_REQUEST_MOBILE_TOKEN_URL, headers={
+            'HTTP_AUTHORIZATION': 'Bearer {}'.format(
+                logged_in_resp.json()['token'])}, data={'uuid': UUID})
+        assert_http_ok(registration_mobile_resp)
+        registration_mobile_resp = self.post(self.API_REQUEST_MOBILE_TOKEN_URL, headers={
+            'HTTP_AUTHORIZATION': 'Bearer {}'.format(
+                logged_in_resp.json()['token'])}, data={'uuid': UUID})
+        assert_http_bad_request(registration_mobile_resp)

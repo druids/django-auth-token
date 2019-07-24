@@ -14,16 +14,19 @@ class DeviceBackend(ModelBackend):
         if not device_uuid or not mobile_login_token:
             return None
 
-        device_key = DeviceKey.objects.filter(uuid=device_uuid, is_active=True).first()
-        if not device_key:
+        device_key_qs = DeviceKey.objects.filter(uuid=device_uuid, is_active=True)
+        if not device_key_qs.exists():
             raise PermissionDenied(
                 'DeviceKey with device_uuid "{}" not found.'.format(device_uuid))
-        if not device_key.check_password(mobile_login_token):
-            raise PermissionDenied(
-                'Provided invalid login_token to DeviceKey with device_uuid "{}".'.format(device_uuid))
-        user = self.get_user(device_key.user_id)
-        if user:
-            device_key.last_login = timezone.now()
-            device_key.save()
-            return user
-        return None
+
+        for device_key in device_key_qs:
+            if device_key.check_password(mobile_login_token):
+                user = self.get_user(device_key.user_id)
+                if user:
+                    device_key.last_login = timezone.now()
+                    device_key.save()
+                    return user
+                else:
+                    return None
+
+        raise PermissionDenied('Provided invalid login_token to DeviceKey with device_uuid "{}".'.format(device_uuid))
