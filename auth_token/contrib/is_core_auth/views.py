@@ -13,7 +13,7 @@ from auth_token.contrib.common.views import LogoutView as _LogoutView
 from auth_token.contrib.common.views import LoginCodeVerificationView as _LoginCodeVerificationView
 from auth_token.contrib.is_core_auth.forms import LoginCodeVerificationForm
 from auth_token.models import Token
-from auth_token.utils import generate_two_factor_code, login, takeover
+from auth_token.utils import login, takeover
 from is_core.generic_views import DefaultCoreViewMixin
 from is_core.generic_views.mixins import GetCoreObjViewMixin
 
@@ -26,7 +26,7 @@ class LoginView(_LoginView):
 class TwoFactorLoginView(LoginView):
 
     def _generate_and_send_two_factor_code(self):
-        code = generate_two_factor_code(Token.TWO_FACTOR_CODE_LENGTH)
+        code = import_string(settings.TWO_FACTOR_CODE_GENERATING_FUNCTION)(Token.TWO_FACTOR_CODE_LENGTH)
         import_string(settings.TWO_FACTOR_SENDING_FUNCTION)(self.request.token, code)
         self.request.token.two_factor_code = make_password(code, salt=Token.TWO_FACTOR_CODE_SALT)
         self.request.token.save()

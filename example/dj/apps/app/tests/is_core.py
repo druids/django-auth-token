@@ -161,10 +161,6 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
         )
 
 
-def send_two_factor_token(token, code):
-    pass
-
-
 class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
 
     INDEX_URL = '/is_core/'
@@ -172,6 +168,13 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     UI_LOGOUT_URL = '/is_core/logout/'
     UI_TWO_FACTOR_LOGIN_URL = '/two-factor-login/'
     UI_CODE_CHECK_LOGIN_URL = '/login-code-verification/'
+    CODE = '12345'
+
+    def send_two_factor_token(token, code):
+        pass
+
+    def generate_code(self):
+        return UILoginISCoreTestCase.CODE
 
     @data_provider('create_user')
     def test_user_should_be_authorized_via_cookie(self, user):
@@ -216,7 +219,8 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         assert_http_redirect(self.get(self.INDEX_URL))
 
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
-    @override_settings(AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.send_two_factor_token')
+    @override_settings(
+        AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
     @data_provider('create_user')
     def test_user_should_be_authorized_with_two_factor_authentication(self, user):
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
@@ -242,20 +246,21 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         assert_equal(code_check_resp.wsgi_request.user, user)
 
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
-    @override_settings(AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.send_two_factor_token')
-    @patch('app.tests.is_core.send_two_factor_token')
-    @patch('auth_token.contrib.is_core_auth.views.generate_two_factor_code')
-    def test_send_two_factor_token_should_be_called_for_two_factor_login(
-            self, generate_two_factor_code, send_two_factor_token):
-        generate_two_factor_code.return_value = '12345'
+    @override_settings(
+        AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
+    @override_settings(
+        AUTH_TOKEN_TWO_FACTOR_CODE_GENERATING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.generate_code')
+    @patch('app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
+    def test_send_two_factor_token_should_be_called_for_two_factor_login(self, send_two_factor_token):
         self.create_user()
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
 
         assert_http_redirect(login_resp)
-        send_two_factor_token.assert_called_once_with(login_resp.wsgi_request.token, '12345')
+        send_two_factor_token.assert_called_once_with(login_resp.wsgi_request.token, self.CODE)
 
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
-    @override_settings(AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.send_two_factor_token')
+    @override_settings(
+        AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
     @data_provider('create_user')
     def test_user_should_not_be_logged_in_two_factor_for_invalid_code(self, user):
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
