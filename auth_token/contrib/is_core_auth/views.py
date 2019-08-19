@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
 from django.views.generic.base import RedirectView
+from django.urls import reverse
 
 import import_string
 from auth_token.config import settings
@@ -14,6 +15,7 @@ from auth_token.contrib.common.views import LoginCodeVerificationView as _LoginC
 from auth_token.contrib.is_core_auth.forms import LoginCodeVerificationForm
 from auth_token.models import Token
 from auth_token.utils import login, takeover
+
 from is_core.generic_views import DefaultCoreViewMixin
 from is_core.generic_views.mixins import GetCoreObjViewMixin
 
@@ -87,3 +89,12 @@ class LoginCodeVerificationView(_LoginCodeVerificationView):
     def form_invalid(self, form):
         self.log_unsuccessful_request()
         return super().form_invalid(form)
+
+    def dispatch(self, request, *args, **kwargs):
+        if self.request.token.is_active:
+            return super().dispatch(request, *args, **kwargs)
+        else:
+            return HttpResponseRedirect('{url}?{redirect_field_name}={value}'.format(
+                url=reverse('IS:login', ), redirect_field_name=self.redirect_field_name,
+                value=self.get_redirect_url()
+            ))
