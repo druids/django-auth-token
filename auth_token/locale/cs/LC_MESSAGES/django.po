@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2019-07-08 12:24+0200\n"
+"POT-Creation-Date: 2020-01-03 18:28+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -24,14 +24,14 @@ msgid ""
 "Please enter a correct %(username)s and password. Note that both fields may "
 "be case-sensitive."
 msgstr ""
-"Vložte prosím správné %(username)s a heslo. Obě pole rozlišují velká a "
-"malá písmena."
+"Vložte prosím správné %(username)s a heslo. Obě pole rozlišují velká a malá "
+"písmena."
 
 #: contrib/common/forms.py:16
 msgid "This account is inactive."
 msgstr "Tento účet je neaktivní."
 
-#: contrib/common/forms.py:37 contrib/rest_framework_auth/serializers.py:11
+#: contrib/common/forms.py:37 contrib/rest_framework_auth/serializers.py:13
 msgid "Password"
 msgstr "Heslo"
 
@@ -43,11 +43,11 @@ msgstr "Zapamatovat uživatele"
 msgid "Missing data"
 msgstr "Chybějící údaje"
 
-#: contrib/is_core_auth/forms.py:16
+#: contrib/is_core_auth/forms.py:18
 msgid "code"
 msgstr "kód"
 
-#: contrib/is_core_auth/forms.py:28
+#: contrib/is_core_auth/forms.py:35
 msgid "The inserted value does not correspond to the sent code."
 msgstr "Vložená hodnota neodpovídá zaslanému kódu."
 
@@ -55,60 +55,72 @@ msgstr "Vložená hodnota neodpovídá zaslanému kódu."
 msgid "Invalid authorization token."
 msgstr "Neplatný autorizační kód."
 
-#: contrib/rest_framework_auth/serializers.py:9
+#: contrib/rest_framework_auth/serializers.py:11
 msgid "Username"
 msgstr "Uživatelské jméno"
 
-#: contrib/rest_framework_auth/serializers.py:15
+#: contrib/rest_framework_auth/serializers.py:17
 msgid "Permanent"
 msgstr "Zapamatovat uživatele"
 
-#: contrib/rest_framework_auth/serializers.py:29
-#: contrib/rest_framework_auth/serializers.py:59
+#: contrib/rest_framework_auth/serializers.py:31
+#: contrib/rest_framework_auth/serializers.py:61
 msgid "Unable to log in with provided credentials."
 msgstr "Pro zadané údaje není možné uživatele přihlásit."
 
-#: contrib/rest_framework_auth/serializers.py:32
+#: contrib/rest_framework_auth/serializers.py:34
 msgid "Must include \"username\" and \"password\"."
 msgstr "Musí obsahovat \"uživatelské jméno\" a \"heslo\"."
 
-#: contrib/rest_framework_auth/serializers.py:41
-#: contrib/rest_framework_auth/serializers.py:71
+#: contrib/rest_framework_auth/serializers.py:43
+#: contrib/rest_framework_auth/serializers.py:73
 msgid "device UUID"
 msgstr "UUID zařízení"
 
-#: contrib/rest_framework_auth/serializers.py:43
+#: contrib/rest_framework_auth/serializers.py:45
 msgid "Device Token"
 msgstr "Kód zařízení"
 
-#: contrib/rest_framework_auth/serializers.py:63
+#: contrib/rest_framework_auth/serializers.py:65
 msgid "Must include \"uuid\" and \"token\"."
 msgstr "Musí obsahovat \"uuid\" a \"kód\"."
 
-#: models.py:156
+#: contrib/rest_framework_auth/serializers.py:81
+msgid "Device key was already registered."
+msgstr "Klíč zařízení je již zaregistrován."
+
+#: models.py:163
 msgid "created at"
 msgstr "vytvořeno"
 
-#: models.py:158
+#: models.py:165
 msgid "UUID"
 msgstr "UUID"
 
-#: models.py:159
+#: models.py:166
 msgid "last login"
 msgstr "poslední přihlášení"
 
-#: models.py:160
+#: models.py:167
 msgid "user"
 msgstr "uživatel"
 
-#: models.py:161
+#: models.py:168
 msgid "login token"
 msgstr "přihlašovací token"
 
-#: models.py:162
+#: models.py:169
 msgid "is active"
 msgstr "je aktivní"
 
-#: models.py:163
+#: models.py:170
 msgid "user agent"
 msgstr "user agent"
+
+#: models.py:174
+msgid "device key"
+msgstr "kód zařízení"
+
+#: models.py:175
+msgid "device keys"
+msgstr "kód zařízení"
