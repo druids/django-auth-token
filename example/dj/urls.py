@@ -1,7 +1,6 @@
 from django.conf import settings
-from django.conf.urls import include
+from django.conf.urls import url, include
 from django.contrib import admin
-from django.urls import path
 
 from app.resource import SimpleAPI
 from auth_token.contrib.admin.views import LoginView as AdminLoginView
@@ -18,17 +17,17 @@ admin.site.login = AdminLoginView.as_view()
 admin.site.logout = AdminLogoutView.as_view()
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('is_core/', include(is_core_site.urls)),
-    path('two-factor-login/', TwoFactorLoginView.as_view()),
-    path('login-code-verification/', LoginCodeVerificationView.as_view()),
-    path('api/login/', LoginAuthToken.as_view()),
-    path('api/logout/', LogoutAuthToken.as_view()),
-    path('api/mobile-login/', MobileLoginAuthToken.as_view()),
-    path('api/mobile-request-token/', MobileRegisterToken.as_view()),
-    path('api/docs/login/', RESTFrameworkLoginView.as_view()),
-    path('api/docs/logout/', RESTFrameworkLogoutView.as_view()),
-    path('api/', SimpleAPI.as_view())
+    url('admin/', admin.site.urls),
+    url('is_core/', include(is_core_site.urls)),
+    url('two-factor-login/', TwoFactorLoginView.as_view()),
+    url('login-code-verification/', LoginCodeVerificationView.as_view()),
+    url('api/login/', LoginAuthToken.as_view()),
+    url('api/logout/', LogoutAuthToken.as_view()),
+    url('api/mobile-login/', MobileLoginAuthToken.as_view()),
+    url('api/mobile-request-token/', MobileRegisterToken.as_view()),
+    url('api/docs/login/', RESTFrameworkLoginView.as_view()),
+    url('api/docs/logout/', RESTFrameworkLogoutView.as_view()),
+    url('api/', SimpleAPI.as_view())
 ]
 
 
