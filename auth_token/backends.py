@@ -10,7 +10,7 @@ class DeviceBackend(ModelBackend):
     Authenticates device with UUID and login_token (password)
     """
 
-    def authenticate(self, device_uuid=None, mobile_login_token=None, **kwargs):
+    def authenticate(self, request, device_uuid=None, mobile_login_token=None, **kwargs):
         if not device_uuid or not mobile_login_token:
             return None
 

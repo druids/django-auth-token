@@ -95,10 +95,11 @@ TEMPLATE_LOADERS = (
     'django.template.loaders.app_directories.Loader',
 )
 
-MIDDLEWARE = MIDDLEWARE_CLASSES = (
+MIDDLEWARE = (
     'django.middleware.common.CommonMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
     'auth_token.middleware.TokenAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'is_core.middleware.RequestKwargsMiddleware',
