@@ -11,7 +11,7 @@ from django.middleware.csrf import rotate_token
 from django.utils.encoding import force_text
 
 from auth_token.config import settings
-from ipware.ip import get_ip
+from ipware.ip import get_client_ip
 
 
 def header_name_to_django(header_name):
@@ -48,7 +48,7 @@ def login(request, user, expiration=True, auth_slug=None, related_objs=None, bac
             )
 
     token = Token.objects.create(user=user, user_agent=request.META.get('HTTP_USER_AGENT', '')[:256],
-                                 expiration=expiration, auth_slug=auth_slug, ip=get_ip(request),
+                                 expiration=expiration, auth_slug=auth_slug, ip=get_client_ip(request)[0],
                                  backend=backend, allowed_cookie=allowed_cookie, allowed_header=allowed_header,
                                  is_authenticated=not two_factor_login)
 
