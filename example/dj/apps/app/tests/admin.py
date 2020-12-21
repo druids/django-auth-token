@@ -1,4 +1,4 @@
-from germanium.annotations import data_provider
+from germanium.decorators import data_consumer
 from germanium.test_cases.client import ClientTestCase
 from germanium.tools.http import assert_http_ok, assert_http_redirect
 from germanium.tools import assert_true, assert_false, assert_in
@@ -19,7 +19,7 @@ class AdminLoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     LOGIN_URL = '/admin/login/'
     LOGOUT_URL = '/admin/logout/'
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_log_and_logout_to_the_administration(self, user):
         assert_http_redirect(self.get(self.INDEX_URL))
         resp = self.post(self.LOGIN_URL, {'username': 'test', 'password': 'test'})

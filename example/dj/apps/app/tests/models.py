@@ -2,7 +2,7 @@ from datetime import timedelta
 
 from django.utils import timezone
 
-from germanium.annotations import data_provider
+from germanium.decorators import data_consumer
 from germanium.test_cases.default import GermaniumTestCase
 from germanium.tools import assert_equal, assert_true, assert_false
 
@@ -19,7 +19,7 @@ __all__ = (
 
 class TokenTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_should_return_proper_string_format_for_expiration(self, user):
         expired_token = Token.objects.create(user=user, ip='127.0.0.1')
         Token.objects.filter(pk=expired_token.pk).update(

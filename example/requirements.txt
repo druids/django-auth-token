@@ -1,10 +1,8 @@
-Django==2.2.14
-django-germanium==2.0.5
-coverage==4.5.1
-selenium==3.11.0
-six==1.11.0
-django-is-core==2.17.0
-djangorestframework==3.9.1
-freezegun==0.3.10
-import_string==0.1.0
+Django==3.1
+django-germanium==2.2.4
+coverage==5.3.1
+https://github.com/druids/django-pyston/tarball/AddedDjango3Support#egg=django-pyston
+https://github.com/matllubos/django-is-core/tarball/pynamodb#egg=django-is-core
+djangorestframework==3.12.2
+freezegun==1.0.0
 -e ../
