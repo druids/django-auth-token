@@ -4,14 +4,15 @@ from django.utils.encoding import force_text
 from django.utils.functional import SimpleLazyObject
 from django.utils.http import http_date
 
-from auth_token import utils
+from auth_token.utils import header_name_to_django, dont_enforce_csrf_checks, get_token
+from auth_token.utils import get_user as utils_get_user
 from auth_token.config import settings
-from auth_token.utils import header_name_to_django
+from auth_token.models import compute_authorization_token_expires_at
 
 
 def get_user(request):
     if not hasattr(request, '_cached_user'):
-        request._cached_user = utils.get_user(request)
+        request._cached_user = utils_get_user(request)
     return request._cached_user
 
 
@@ -34,14 +35,17 @@ class TokenAuthenticationMiddleware:
         """
         Lazy set user and token
         """
-        request.token = utils.get_token(request)
+        request.token = get_token(request)
         request.user = SimpleLazyObject(lambda: get_user(request))
-        request._dont_enforce_csrf_checks = utils.dont_enforce_csrf_checks(request)
+        request._dont_enforce_csrf_checks = dont_enforce_csrf_checks(request)
 
     def _update_token_and_cookie(self, request, response, max_age, expires):
-        request.token.save()
+        request.token.change_and_save(
+            expires_at=compute_authorization_token_expires_at(),
+            update_only_changed_fields=True
+        )
         if settings.COOKIE and request.token.allowed_cookie:
-            response.set_cookie(settings.COOKIE_NAME, force_text(request.token.key), max_age=max_age,
+            response.set_cookie(settings.COOKIE_NAME, force_text(request.token.secret_key), max_age=max_age,
                                 expires=expires, httponly=settings.COOKIE_HTTPONLY,
                                 secure=settings.COOKIE_SECURE, domain=settings.COOKIE_DOMAIN)
         return response
@@ -59,8 +63,8 @@ class TokenAuthenticationMiddleware:
         """
         # Save the session data and refresh the client cookie.
         # Skip session save for 500 responses, refs #3881.
-        if response.status_code != 500 and hasattr(request, 'token') and request.token.is_active:
-            if request.token.expiration:
+        if response.status_code not in {429, 500} and hasattr(request, 'token') and request.token.is_active:
+            if request.token.preserve_cookie:
                 # The user did not choose to be permanently signed. Hence, the authentication cookie that holds the
                 # token value is set to expire when the browser is closed
                 max_age = None

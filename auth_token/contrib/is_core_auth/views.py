@@ -1,4 +1,5 @@
 from django import forms
+from django.conf import settings as django_settings
 from django.contrib.auth import login as auth_login
 from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
@@ -13,8 +14,9 @@ from auth_token.contrib.common.views import LoginView as _LoginView
 from auth_token.contrib.common.views import LogoutView as _LogoutView
 from auth_token.contrib.common.views import LoginCodeVerificationView as _LoginCodeVerificationView
 from auth_token.contrib.is_core_auth.forms import LoginCodeVerificationForm
-from auth_token.models import Token
-from auth_token.utils import login, takeover
+from auth_token.enums import AuthorizationRequestType
+from auth_token.models import AuthorizationToken
+from auth_token.utils import create_authorization_request, grant_authorization_request, login, takeover
 
 from is_core.generic_views import DefaultCoreViewMixin
 from is_core.generic_views.mixins import GetCoreObjViewMixin
@@ -27,16 +29,23 @@ class LoginView(_LoginView):
 
 class TwoFactorLoginView(LoginView):
 
-    def _generate_and_send_two_factor_code(self):
-        code = import_string(settings.TWO_FACTOR_CODE_GENERATING_FUNCTION)(Token.TWO_FACTOR_CODE_LENGTH)
-        import_string(settings.TWO_FACTOR_SENDING_FUNCTION)(self.request.token, code)
-        self.request.token.two_factor_code = make_password(code, salt=Token.TWO_FACTOR_CODE_SALT)
-        self.request.token.save()
+    def _create_authorization_request(self, user):
+        otp_sender = import_string(settings.TWO_FACTOR_SENDING_FUNCTION)
+        authorization_request = create_authorization_request(
+            type=AuthorizationRequestType.OTP,
+            slug=settings.TWO_FACTOR_AUTHORIZATION_SLUG,
+            user=user,
+            title=settings.TWO_FACTOR_AUTHORIZATION_TITLE,
+            description=settings.TWO_FACTOR_AUTHORIZATION_DESCRIPTION,
+            otp_key_generator=import_string(settings.TWO_FACTOR_CODE_GENERATING_FUNCTION),
+            authorization_token=self.request.token
+        )
+        otp_sender(authorization_request, authorization_request.secret_key)
 
-    def _login(self, user, expiration, form):
+    def _login(self, user, permanent, form):
         login(
-            self.request, user, expiration, allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header,
-            two_factor_login=True
+            self.request, user, preserve_cookie=permanent, allowed_cookie=self.allowed_cookie,
+            allowed_header=self.allowed_header, two_factor_login=True
         )
 
     def get_success_url(self):
@@ -50,10 +59,11 @@ class TwoFactorLoginView(LoginView):
         The user has provided valid credentials (this was checked in AuthenticationForm.is_valid()). So now we
         can check the test cookie stuff and log him in.
         """
-        self._login(form.get_user(), not form.is_permanent(), form)
+        user = form.get_user()
+        self._login(user, not form.is_permanent(), form)
         try:
             # send user the code for second part of authentication process
-            self._generate_and_send_two_factor_code()
+            self._create_authorization_request(user)
         except ValidationError as err:
             form._errors[forms.forms.NON_FIELD_ERRORS] = ErrorList([err])
             return self.form_invalid(form)
@@ -83,6 +93,7 @@ class LoginCodeVerificationView(_LoginCodeVerificationView):
 
     def form_valid(self, form):
         self.log_successful_request()
+        grant_authorization_request(form.get_authorization_request())
         auth_login(self.request, form.get_user(), self.request.token.backend)
         return HttpResponseRedirect(self.get_success_url())
 
@@ -91,10 +102,12 @@ class LoginCodeVerificationView(_LoginCodeVerificationView):
         return super().form_invalid(form)
 
     def dispatch(self, request, *args, **kwargs):
-        if self.request.token.is_active:
-            return super().dispatch(request, *args, **kwargs)
-        else:
+        if not self.request.token.is_active:
             return HttpResponseRedirect('{url}?{redirect_field_name}={value}'.format(
-                url=reverse('IS:login', ), redirect_field_name=self.redirect_field_name,
+                url=reverse('IS:login'), redirect_field_name=self.redirect_field_name,
                 value=self.get_redirect_url()
             ))
+        elif self.request.token.is_authenticated:
+            return HttpResponseRedirect(self.get_success_url())
+
+        return super().dispatch(request, *args, **kwargs)

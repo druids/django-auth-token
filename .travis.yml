@@ -6,13 +6,12 @@ python:
   - "3.9"
 
 env:
-  - DJANGO_VERSION=2.2
-  - DJANGO_VERSION=3.0
   - DJANGO_VERSION=3.1
 
 # command to install dependencies
 install:
   - cd example
+  - pip install coveralls
   - pip install -r requirements.txt
   - pip uninstall -y -q django
   - pip install -q Django==$DJANGO_VERSION

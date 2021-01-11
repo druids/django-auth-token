@@ -96,6 +96,34 @@ Setup
 
   If you have turned on user takeover setting define URL where will be used after user account takeover. Default value is ``'/'``.
 
+.. attribute:: AUTH_TOKEN_TWO_FACTOR_ENABLED
+
+  Two factor authentication is enabled or disabled. By default value ``False`` is set.
+
+.. attribute:: AUTH_TOKEN_TWO_FACTOR_REDIRECT_URL
+
+  The path the user is redirected to after successful two factor authentication. Default value ``'login-code-verification/'``.
+
+.. attribute:: AUTH_TOKEN_TWO_FACTOR_AUTHORIZATION_SLUG
+
+  Authorization request slug for two factor authorization. Default value is ``'2FA'``.
+
+.. attribute:: AUTH_TOKEN_TWO_FACTOR_CODE_GENERATING_FUNCTION
+
+  Function which generates code for two factor authentication. Default value is ``'auth_token.utils.generate_two_factor_key'``.
+
+.. attribute:: AUTH_TOKEN_TWO_FACTOR_CODE_GENERATING_FUNCTION_LENGTH
+
+  Default length of two factor code. Default value is ``6``.
+
+.. attribute:: AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION
+
+  Function, which need to be implemented to send the key for second part of authorization process to the user.
+
+.. attribute:: AUTH_TOKEN_AUTHORIZATION_REQUEST_OTP_DEBUG_CODE
+
+  Default OTP form authorization request.
+
 .. attribute:: AUTH_TOKEN_RENEWAL_EXEMPT_HEADER
 
   HTTP header name that causes that token expiration time will not be extended. Default value is ``'X-Authorization-Renewal-Exempt'``.
@@ -107,3 +135,23 @@ Setup
 .. attribute:: AUTH_TOKEN_MAX_RANDOM_KEY_ITERATIONS
 
   Authorization token key is generated as random string. Because space of random strings is limited there can be collisions. Setting sets number of attempts to generate unique string. Default value is ``100``.
+
+.. attribute:: AUTH_TOKEN_HASH_SALT
+
+  Salt used for hashing keys store in the database (AuthorizationToken key and OneTimePassword key).
+
+.. attribute:: AUTH_TOKEN_DEFAULT_OTP_AGE
+
+  Default one time password expiration time. Default value is 1 hour.
+
+.. attribute:: AUTH_TOKEN_DEFAULT_AUTHORIZATION_REQUEST_AGE
+
+  Default authorization request expiration time.. Default value is 1 hour.
+
+.. attribute:: AUTH_TOKEN_AUTHORIZATION_REQUEST_PRESERVE_AGE
+
+  Authorization tokens will not be removed right after its expiration but after X seconds after it. Setting configures the X value. Default value is set to 7 days.
+
+.. attribute:: AUTH_TOKEN_FORM_COOKIE_PERMANENT
+
+  Authorization form will provide way how to store authorization token in cookie after closing the browser.

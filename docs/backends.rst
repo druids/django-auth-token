@@ -28,4 +28,4 @@ At first you must update your settings by adding a new authentication method::
 Then when you need to authenticate a user call ``django.contrib.auth.authenticate`` with UUID of the device
 and token recieved from ``get_or_create_token`` method during device registration::
 
-    logged_user = authenticate(device_uuid=device_uuid, mobile_login_token=mobile_login_token)
+    logged_user = authenticate(mobile_device_id=device_uuid, mobile_login_token=mobile_login_token)

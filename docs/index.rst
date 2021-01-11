@@ -24,4 +24,6 @@ Content
    models
    backends
    helpers
+   one_time_password
+   authorization_request
    contribution
