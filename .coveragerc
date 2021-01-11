@@ -1,0 +1,3 @@
+[run]
+source = auth_token
+omit = */site-packages/*,*/migrations/*,*/lib/*,*/settings/*

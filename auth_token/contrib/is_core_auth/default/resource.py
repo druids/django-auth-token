@@ -24,8 +24,11 @@ class AuthResource(RESTResource):
     def _sucessful_login(self, request):
         pass
 
-    def _login(self, user, expiration, form):
-        login(self.request, user, expiration, allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header)
+    def _login(self, user, permanent, form):
+        login(
+            self.request, user, preserve_cookie=permanent,
+            allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
+        )
 
     def _unsucessful_login(self, request):
         pass
@@ -48,7 +51,7 @@ class AuthResource(RESTResource):
 
         self._sucessful_login(self.request)
         self._login(form.get_user(), not form.is_permanent(), form)
-        return {'token': self.request.token.key, 'user': form.get_user()}
+        return {'token': self.request.token.secret_key, 'user': form.get_user()}
 
     def delete(self):
         if self.request.user.is_authenticated:

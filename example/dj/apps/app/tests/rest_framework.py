@@ -3,7 +3,7 @@ from germanium.test_cases.rest import RESTTestCase
 from germanium.tools.http import assert_http_ok, assert_http_unauthorized, assert_http_accepted, assert_http_bad_request
 from germanium.tools import assert_true, assert_false, assert_in, assert_not_in, assert_equal
 
-from auth_token.models import Token, DeviceKey
+from auth_token.models import AuthorizationToken, MobileDevice
 
 from .base import BaseTestCaseMixin
 
@@ -33,8 +33,8 @@ class RESTFrameworkLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
             self.get(INDEX_URL, headers={'HTTP_AUTHORIZATION': 'Bearer {}'.format(resp.json()['token'])})
         )
         assert_not_in('Authorization', self.c.cookies)
-        assert_true(Token.objects.last().allowed_header)
-        assert_false(Token.objects.last().allowed_cookie)
+        assert_true(AuthorizationToken.objects.last().allowed_header)
+        assert_false(AuthorizationToken.objects.last().allowed_cookie)
 
     @data_consumer('create_user')
     def test_user_should_be_logged_out_via_http_header(self, user):
@@ -59,7 +59,7 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
 
     @data_consumer('create_user')
     def test_user_should_be_authorized_from_token_and_uuid(self, user):
-        device_token = DeviceKey.objects.create_token(uuid=UUID, user=user)
+        device_token = MobileDevice.objects.activate_or_create(uuid=UUID, user=user).secret_password
         resp = self.post(self.API_MOBILE_LOGIN_URL,
                          {'uuid': UUID, 'login_device_token': device_token})
         assert_http_ok(resp)
@@ -70,13 +70,13 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
                     resp.json()['token'])})
         )
         assert_not_in('Authorization', self.c.cookies)
-        assert_true(Token.objects.last().allowed_header)
-        assert_false(Token.objects.last().allowed_cookie)
+        assert_true(AuthorizationToken.objects.last().allowed_header)
+        assert_false(AuthorizationToken.objects.last().allowed_cookie)
 
     @data_consumer('create_user')
     def test_user_should_be_authorized_from_token_and_shorter_uuid(self, user):
 
-        device_token = DeviceKey.objects.create_token(uuid=SHORTER_UUID, user=user)
+        device_token = MobileDevice.objects.activate_or_create(uuid=SHORTER_UUID, user=user).secret_password
         resp = self.post(self.API_MOBILE_LOGIN_URL,
                          {'uuid': SHORTER_UUID, 'login_device_token': device_token})
         assert_http_ok(resp)
@@ -89,7 +89,7 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
                 logged_in_resp.json()['token'])}, data={'uuid': UUID})
         assert_http_ok(registration_mobile_resp)
         mobile_token = registration_mobile_resp.json()['device_login_token']
-        device_keys = DeviceKey.objects.all()
+        device_keys = MobileDevice.objects.all()
         assert_equal(1, device_keys.count())
         device_key = device_keys[0]
         assert_true(device_key.check_password(mobile_token))

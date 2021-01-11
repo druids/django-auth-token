@@ -2,6 +2,8 @@ from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.contrib.auth import authenticate, get_user_model
 
+from auth_token.config import settings
+
 
 class AuthenticationMixin:
     """
@@ -80,7 +82,8 @@ class TokenAuthenticationMixin(AuthenticationMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['permanent'] = forms.BooleanField(label=_('Remember user'), required=False)
+        if settings.FORM_COOKIE_PERMANENT:
+            self.fields['permanent'] = forms.BooleanField(label=_('Remember user'), required=False)
 
     def is_permanent(self):
         return self.cleaned_data.get('permanent', False)
