@@ -5,7 +5,7 @@ from io import StringIO
 from django.core.management import call_command
 from django.utils import timezone
 
-from germanium.annotations import data_provider
+from germanium.decorators import data_consumer
 from germanium.test_cases.default import GermaniumTestCase
 from germanium.tools import assert_equal
 
@@ -22,7 +22,7 @@ __all__ = (
 
 class CleanTokensCommandTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_clean_tokens_remove_only_old_tokens(self, user):
         expired_tokens = [Token.objects.create(user=user, ip='127.0.0.1') for _ in range(10)]
         not_expired_tokens = [Token.objects.create(user=user, ip='127.0.0.1') for _ in

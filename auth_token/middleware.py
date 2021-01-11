@@ -2,7 +2,7 @@ import time
 
 from django.utils.encoding import force_text
 from django.utils.functional import SimpleLazyObject
-from django.utils.http import cookie_date
+from django.utils.http import http_date
 
 from auth_token import utils
 from auth_token.config import settings
@@ -67,7 +67,7 @@ class TokenAuthenticationMiddleware:
                 expires = None
             else:
                 max_age = settings.COOKIE_AGE
-                expires = cookie_date(time.time() + max_age)
+                expires = http_date(time.time() + max_age)
 
             if not self._is_token_renewal_exempt(request):
                 self._update_token_and_cookie(request, response, max_age, expires)

@@ -10,7 +10,7 @@ from nose.tools import assert_equal
 from auth_token.config import settings
 from auth_token.models import Token
 from freezegun import freeze_time
-from germanium.annotations import data_provider
+from germanium.decorators import data_consumer
 from germanium.test_cases.client import ClientTestCase
 from germanium.test_cases.rest import RESTTestCase
 from germanium.tools import assert_false, assert_in, assert_not_in, assert_true
@@ -30,7 +30,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
     INDEX_URL = '/is_core/'
     API_LOGIN_URL = '/is_core/api/login/'
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_authorized_via_http_header(self, user):
         assert_http_redirect(self.get(self.INDEX_URL))
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
@@ -44,7 +44,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
         assert_false(Token.objects.last().allowed_cookie)
 
     @override_settings(AUTH_TOKEN_HEADER=False)
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_not_be_authorized_via_http_header_if_headers_are_turned_off(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -55,7 +55,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
         assert_false(self.client.cookies)
 
     @override_settings(AUTH_TOKEN_HEADER_NAME='X-Authorization')
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_authorized_with_changed_header_name(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -67,7 +67,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
             self.get(self.INDEX_URL, headers={'HTTP_AUTHORIZATION': 'Bearer {}'.format(resp.json()['token'])})
         )
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_not_be_authorized_via_header_if_token_has_not_allowed_header(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -80,7 +80,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
         )
 
     @override_settings(AUTH_TOKEN_HEADER_TOKEN_TYPE=None)
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_authorized_via_header_without_token_type(self, user):
 
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
@@ -92,7 +92,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
             self.get(self.INDEX_URL, headers={'HTTP_AUTHORIZATION': resp.json()['token']})
         )
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_token_type_should_be_required(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -103,7 +103,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
             self.get(self.INDEX_URL, headers={'HTTP_AUTHORIZATION': resp.json()['token']})
         )
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_token_should_be_updated_during_its_access(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -116,7 +116,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
             assert_in('X-Authorization-Expiration', resp)
             assert_true(resp['X-Authorization-Expiration'].startswith('0:59'))
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_token_should_not_be_updated_during_its_access_if_request_contains_specific_haeader(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -132,7 +132,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
             assert_in('X-Authorization-Expiration', resp)
             assert_true(resp['X-Authorization-Expiration'].startswith('0:49'))
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_token_should_be_expired(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -145,7 +145,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
                 'HTTP_AUTHORIZATION': 'Bearer {}'.format(token),
             }))
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_logged_out_via_http_header(self, user):
         resp = self.post(self.API_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_ok(resp)
@@ -176,7 +176,7 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     def generate_code(self):
         return UILoginISCoreTestCase.CODE
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_authorized_via_cookie(self, user):
         assert_http_redirect(self.get(self.INDEX_URL))
         resp = self.post(self.UI_LOGIN_URL, {'username': 'test', 'password': 'test'})
@@ -187,21 +187,21 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         assert_true(Token.objects.last().allowed_cookie)
 
     @override_settings(AUTH_TOKEN_COOKIE=False)
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_not_be_authorized_via_cookie_if_cookie_is_turned_off(self, user):
         resp = self.post(self.UI_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_redirect(resp)
         assert_http_redirect(self.get(self.INDEX_URL))
 
     @override_settings(AUTH_TOKEN_COOKIE_NAME='ChangedAuthorization')
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_authorized_with_changed_cookie_name(self, user):
         resp = self.post(self.UI_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_redirect(resp)
         assert_in('ChangedAuthorization', self.c.cookies)
         assert_http_ok(self.get(self.INDEX_URL))
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_not_be_authorized_via_cookie_if_cookie_has_not_allowed_header(self, user):
         resp = self.post(self.UI_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_redirect(resp)
@@ -210,7 +210,7 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         Token.objects.all().update(allowed_cookie=False)
         assert_http_redirect(self.get(self.INDEX_URL))
 
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_logged_out_via_cookies(self, user):
         resp = self.post(self.UI_LOGIN_URL, {'username': 'test', 'password': 'test'})
         assert_http_redirect(resp)
@@ -221,7 +221,7 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
     @override_settings(
         AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_be_authorized_with_two_factor_authentication(self, user):
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
 
@@ -261,7 +261,7 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
     @override_settings(
         AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
-    @data_provider('create_user')
+    @data_consumer('create_user')
     def test_user_should_not_be_logged_in_two_factor_for_invalid_code(self, user):
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
 
