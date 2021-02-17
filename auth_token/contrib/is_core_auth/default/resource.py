@@ -24,8 +24,9 @@ class AuthResource(RESTResource):
     def _sucessful_login(self, request):
         pass
 
-    def _login(self, user, expiration, form):
-        login(self.request, user, expiration, allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header)
+    def _login(self, user, expiration, form, auth_slug=None):
+        login(self.request, user, expiration, auth_slug, allowed_cookie=self.allowed_cookie,
+              allowed_header=self.allowed_header)
 
     def _unsucessful_login(self, request):
         pass
