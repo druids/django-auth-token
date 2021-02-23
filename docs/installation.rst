@@ -155,3 +155,7 @@ Setup
 .. attribute:: AUTH_TOKEN_FORM_COOKIE_PERMANENT
 
   Authorization form will provide way how to store authorization token in cookie after closing the browser.
+
+.. attribute:: AUTH_TOKEN_OTP_DEFAULT_KEY_GENERATOR
+
+  Path to the default OTP generator. Default value is ``'auth_token.utils.generate_key'``.

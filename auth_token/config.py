@@ -39,6 +39,7 @@ DEFAULTS = {
                                                              # (default: 7 days)
     'AUTHORIZATION_REQUEST_OTP_DEBUG_CODE': None,  # Default code two factor OTP
     'FORM_COOKIE_PERMANENT': False,  # Add permanent checkbox to auth form.
+    'OTP_DEFAULT_KEY_GENERATOR': 'auth_token.utils.generate_key',  # Default key generator for OTP
 }
 
 

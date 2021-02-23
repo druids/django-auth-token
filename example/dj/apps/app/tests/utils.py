@@ -41,6 +41,10 @@ def authorization_receiver(sender, authorization_request, **kwargs):
     pass
 
 
+def test_otp_generator():
+    return '12345'
+
+
 class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     def set_up(self):
@@ -346,6 +350,14 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_equal(otp.data, {'otp': 'data'})
         assert_equal(otp.related_objects.count(), 1)
         assert_equal(otp.related_objects.get().object, user)
+
+    @freeze_time(now())
+    @override_settings(AUTH_TOKEN_OTP_DEFAULT_KEY_GENERATOR='app.tests.utils.test_otp_generator')
+    @data_consumer('create_user')
+    def test_create_otp_should_create_new_otp_with_changed_default_generator_in_config(self, user):
+        otp = create_otp('test')
+        assert_equal(otp.secret_key, '12345')
+        assert_equal(otp.key, hash_key('12345', salt='test'))
 
     def test_create_otp_with_deactivation_old_otp_codes_should_deactivate_it(self):
         otp1 = create_otp('test')
@@ -666,7 +678,8 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
             assert_equal(authorization_request.refresh_from_db().state, AuthorizationRequestState.CANCELLED)
 
     @data_consumer('create_user')
-    def test_cancel_authorization_request_should_cancel_authorization_and_not_call_receiver_with_another_slug(self, user):
+    def test_cancel_authorization_request_should_cancel_authorization_and_not_call_receiver_with_another_slug(self,
+                                                                                                              user):
         authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:

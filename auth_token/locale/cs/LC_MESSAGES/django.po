@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-18 10:25+0100\n"
+"POT-Creation-Date: 2021-02-24 09:09+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,7 +47,7 @@ msgstr "Heslo"
 msgid "Remember user"
 msgstr "Zapamatovat uživatele"
 
-#: contrib/is_core_auth/default/resource.py:49
+#: contrib/is_core_auth/default/resource.py:50
 msgid "Missing data"
 msgstr "Chybějící údaje"
 
@@ -115,7 +115,7 @@ msgstr "zamítnuto"
 
 #: enums.py:16 enums.py:23
 msgid "cancelled"
-msgstr ""
+msgstr "zrušeno"
 
 #: enums.py:24
 msgid "waiting"
@@ -125,15 +125,15 @@ msgstr "čeká"
 msgid "expired"
 msgstr "expirováno"
 
-#: models.py:54 models.py:395
+#: models.py:54 models.py:339
 msgid "key"
 msgstr "klíč"
 
-#: models.py:61 models.py:196 models.py:275 models.py:451
+#: models.py:61 models.py:196 models.py:275 models.py:392
 msgid "user"
 msgstr "uživatel"
 
-#: models.py:69 models.py:285 models.py:412
+#: models.py:69 models.py:285 models.py:356
 msgid "is active"
 msgstr "je aktivní"
 
@@ -141,7 +141,7 @@ msgstr "je aktivní"
 msgid "user agent"
 msgstr "user agent"
 
-#: models.py:79 models.py:402 models.py:505
+#: models.py:79 models.py:346 models.py:446
 msgid "expires at"
 msgstr "datum a čas expirace"
 
@@ -149,7 +149,7 @@ msgstr "datum a čas expirace"
 msgid "IP"
 msgstr "IP"
 
-#: models.py:90 models.py:263 models.py:407 models.py:471
+#: models.py:90 models.py:263 models.py:351 models.py:412
 msgid "slug"
 msgstr "slug"
 
@@ -173,7 +173,7 @@ msgstr "ověřený"
 msgid "preserve cookie"
 msgstr "zachovat cookie"
 
-#: models.py:139 models.py:190 models.py:443
+#: models.py:139 models.py:190 models.py:384
 msgid "authorization token"
 msgstr "přihlašovací token"
 
@@ -207,48 +207,48 @@ msgstr "přihlašovací token"
 
 #: models.py:295
 msgid "is primary"
-msgstr ""
+msgstr "primární"
 
-#: models.py:310 models.py:459
+#: models.py:310 models.py:400
 msgid "mobile devices"
 msgstr "mobilní zařízení"
 
-#: models.py:416 models.py:499
+#: models.py:360 models.py:440
 msgid "data"
 msgstr "data"
 
-#: models.py:429
+#: models.py:373
 msgid "one time password"
 msgstr "jednorázové heslo"
 
-#: models.py:430 models.py:465
+#: models.py:374 models.py:406
 msgid "one time passwords"
 msgstr "jednorázová hesla"
 
-#: models.py:476
+#: models.py:417
 msgid "title"
 msgstr "název"
 
-#: models.py:482
+#: models.py:423
 msgid "description"
 msgstr "popis"
 
-#: models.py:487
+#: models.py:428
 msgid "result"
 msgstr "výsledek"
 
-#: models.py:493
+#: models.py:434
 msgid "type"
 msgstr "typ"
 
-#: models.py:510
+#: models.py:451
 msgid "granted at"
 msgstr "uděleno"
 
-#: models.py:518
+#: models.py:459
 msgid "authorization request"
 msgstr "žádost o autorizaci"
 
-#: models.py:519
+#: models.py:460
 msgid "authorization requests"
 msgstr "žádosti o autorizace"

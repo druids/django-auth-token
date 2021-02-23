@@ -8,6 +8,8 @@ from functools import reduce
 
 from operator import and_ as AND
 
+import import_string
+
 from django.conf import settings as django_settings
 from django.contrib.auth import _get_backends, load_backend
 from django.contrib.auth.models import AnonymousUser
@@ -383,7 +385,7 @@ def create_otp(slug, related_objects=None, data=None, key_generator=None, expira
     if deactivate_old:
         deactivate_otp(slug, related_objects=related_objects)
 
-    key_generator = generate_key if key_generator is None else key_generator
+    key_generator = import_string(settings.OTP_DEFAULT_KEY_GENERATOR) if key_generator is None else key_generator
 
     otp = OneTimePassword.objects.create(
         slug=slug,
