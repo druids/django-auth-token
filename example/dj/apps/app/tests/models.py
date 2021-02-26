@@ -22,15 +22,15 @@ __all__ = (
 class TokenTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
-    def test_should_return_proper_string_format_for_expiration(self, user):
+    def test_should_return_proper_time_to_expiration(self, user):
         expired_token = AuthorizationToken.objects.create(
             user=user, ip='127.0.0.1', backend='test', expires_at=timezone.now()
         )
         expired_token = AuthorizationToken.objects.get(pk=expired_token.pk)
-        assert_equal('00:00:00', AuthorizationToken.objects.get(pk=expired_token.pk).str_time_to_expiration)
+        assert_equal(AuthorizationToken.objects.get(pk=expired_token.pk).time_to_expiration, timedelta(seconds=0))
 
         non_expired_token = AuthorizationToken.objects.create(user=user, ip='127.0.0.1', backend='test')
-        assert_equal('0:59:59', non_expired_token.str_time_to_expiration.split('.')[0])
+        assert_true(non_expired_token.time_to_expiration.total_seconds() > 0)
 
     @data_consumer('create_user')
     def test_only_one_mobile_device_should_be_primary(self, user):

@@ -14,7 +14,6 @@ from auth_token.contrib.common.views import LoginView as _LoginView
 from auth_token.contrib.common.views import LogoutView as _LogoutView
 from auth_token.contrib.common.views import LoginCodeVerificationView as _LoginCodeVerificationView
 from auth_token.contrib.is_core_auth.forms import LoginCodeVerificationForm
-from auth_token.enums import AuthorizationRequestType
 from auth_token.models import AuthorizationToken
 from auth_token.utils import create_authorization_request, grant_authorization_request, login, takeover
 
@@ -32,19 +31,18 @@ class TwoFactorLoginView(LoginView):
     def _create_authorization_request(self, user):
         otp_sender = import_string(settings.TWO_FACTOR_SENDING_FUNCTION)
         authorization_request = create_authorization_request(
-            type=AuthorizationRequestType.OTP,
             slug=settings.TWO_FACTOR_AUTHORIZATION_SLUG,
             user=user,
             title=settings.TWO_FACTOR_AUTHORIZATION_TITLE,
             description=settings.TWO_FACTOR_AUTHORIZATION_DESCRIPTION,
-            otp_key_generator=import_string(settings.TWO_FACTOR_CODE_GENERATING_FUNCTION),
-            authorization_token=self.request.token
+            authorization_token=self.request.token,
+            backend_path=settings.TWO_FACTOR_AUTHORIZATION_BACKEND
         )
         otp_sender(authorization_request, authorization_request.secret_key)
 
-    def _login(self, user, permanent, form):
+    def _login(self, user, preserve_cookie, form):
         login(
-            self.request, user, preserve_cookie=permanent, allowed_cookie=self.allowed_cookie,
+            self.request, user, preserve_cookie=preserve_cookie, allowed_cookie=self.allowed_cookie,
             allowed_header=self.allowed_header, two_factor_login=True
         )
 

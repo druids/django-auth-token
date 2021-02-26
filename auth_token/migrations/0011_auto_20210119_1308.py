@@ -83,8 +83,7 @@ class Migration(migrations.Migration):
                 ('result',
                  enumfields.fields.NumEnumField(blank=True, enum=auth_token.enums.AuthorizationRequestResult, null=True,
                                                 verbose_name='result')),
-                ('type',
-                 enumfields.fields.NumEnumField(enum=auth_token.enums.AuthorizationRequestType, verbose_name='type')),
+                ('backend', models.CharField(max_length=250, verbose_name='backend')),
                 ('data', models.JSONField(blank=True, encoder=django.core.serializers.json.DjangoJSONEncoder, null=True,
                                           verbose_name='data')),
                 ('expires_at', models.DateTimeField(blank=True, null=True, verbose_name='expires at')),
@@ -199,18 +198,6 @@ class Migration(migrations.Migration):
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL,
                                     related_name='authorization_requests', to='auth_token.authorizationtoken',
                                     verbose_name='authorization token'),
-        ),
-        migrations.AddField(
-            model_name='authorizationrequest',
-            name='mobile_devices',
-            field=models.ManyToManyField(blank=True, related_name='authorization_requests',
-                                         to='auth_token.MobileDevice', verbose_name='mobile devices'),
-        ),
-        migrations.AddField(
-            model_name='authorizationrequest',
-            name='one_time_passwords',
-            field=models.ManyToManyField(blank=True, related_name='authorization_request',
-                                         to='auth_token.OneTimePassword', verbose_name='one time passwords'),
         ),
         migrations.AddField(
             model_name='mobiledevice',

@@ -9,7 +9,6 @@ from germanium.decorators import data_consumer
 from germanium.test_cases.default import GermaniumTestCase
 from germanium.tools import assert_equal, test_call_command
 
-from auth_token.enums import AuthorizationRequestType
 from auth_token.models import AuthorizationToken, OneTimePassword, AuthorizationRequest
 from auth_token.config import settings
 from auth_token.utils import generate_key
@@ -57,24 +56,3 @@ class CleanTokensCommandTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_equal(OneTimePassword.objects.filter(pk__in=[obj.pk for obj in inactive_otp]).count(), 0)
         assert_equal(OneTimePassword.objects.filter(pk__in=[obj.pk for obj in not_expired_otp]).count(), 10)
 
-    @data_consumer('create_user')
-    def test_clean_authorization_requests_should_remove_only_old_objects(self, user):
-        authorization_requests = [
-            AuthorizationRequest.objects.create(
-                type=AuthorizationRequestType.OTP,
-                slug='test',
-                user=user,
-                title='test',
-                expires_at=timezone.now()
-            ) for _ in range(10)
-        ]
-
-        test_call_command('clean_authorization_requests')
-        assert_equal(AuthorizationRequest.objects.filter(pk__in=[obj.pk for obj in authorization_requests]).count(), 10)
-
-        with freeze_time(timezone.now() + timedelta(days=7, seconds=1)):
-            test_call_command('clean_authorization_requests')
-            assert_equal(
-                AuthorizationRequest.objects.filter(pk__in=[obj.pk for obj in authorization_requests]).count(),
-                0
-            )

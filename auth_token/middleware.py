@@ -51,7 +51,7 @@ class TokenAuthenticationMiddleware:
         return response
 
     def _set_auth_expiration_header(self, request, response):
-        response[settings.EXPIRATION_HEADER] = request.token.str_time_to_expiration
+        response[settings.EXPIRATION_HEADER] = str(request.token.time_to_expiration)
 
     def _is_token_renewal_exempt(self, request):
         return (getattr(request, 'auth_token_renewal_exempt', False) or

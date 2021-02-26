@@ -29,7 +29,7 @@ class LoginCodeVerificationForm(SmartForm):
     def get_authorization_request(self):
         return self.request.token.authorization_requests.filter(
             slug=settings.TWO_FACTOR_AUTHORIZATION_SLUG
-        ).first()
+        ).first('-created_at')
 
     def get_user(self):
         return self.request.token.user
@@ -38,9 +38,8 @@ class LoginCodeVerificationForm(SmartForm):
         code = self.cleaned_data.get('code')
         authorization_requests = self.get_authorization_request()
 
-        if not authorization_requests or not check_authorization_request(authorization_requests, otp_secret_key=code):
-            raise forms.ValidationError(_('The inserted value does not correspond to the sent code.'))
+        if authorization_requests and check_authorization_request(authorization_requests, otp_secret_key=code):
+            self.request.token.change_and_save(is_authenticated=True, update_only_changed_fields=True)
         else:
-            self.request.token.is_authenticated = True
-            self.request.token.save()
+            raise forms.ValidationError(_('The inserted value does not correspond to the sent code.'))
         return code

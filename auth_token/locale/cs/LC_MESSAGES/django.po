@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-24 09:09+0100\n"
+"POT-Creation-Date: 2021-02-26 19:10+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,13 +18,13 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
-#: config.py:22
+#: config.py:24
 msgid "Second factor authorization"
 msgstr "Druhý faktor autorizace"
 
-#: config.py:23
+#: config.py:25
 msgid "Please insert code for second factor authorization"
-msgstr "Prosím vložte kód pro druhý faktor"
+msgstr "Prosím vložte kód pro druhý faktor autorizace"
 
 #: contrib/common/forms.py:16
 #, python-format
@@ -55,7 +55,7 @@ msgstr "Chybějící údaje"
 msgid "code"
 msgstr "kód"
 
-#: contrib/is_core_auth/forms.py:42
+#: contrib/is_core_auth/forms.py:44
 msgid "The inserted value does not correspond to the sent code."
 msgstr "Vložená hodnota neodpovídá zaslanému kódu."
 
@@ -97,158 +97,150 @@ msgstr "Musí obsahovat \"uuid\" a \"kód\"."
 msgid "Device key was already registered."
 msgstr "Klíč zařízení je již zaregistrován."
 
-#: enums.py:8
-msgid "OTP"
-msgstr "OTP"
-
-#: enums.py:9 models.py:121 models.py:309
-msgid "mobile device"
-msgstr "mobilní zařízení"
-
-#: enums.py:14 enums.py:21
+#: enums.py:8 enums.py:15
 msgid "granted"
 msgstr "uděleno"
 
-#: enums.py:15 enums.py:22
+#: enums.py:9 enums.py:16
 msgid "denied"
 msgstr "zamítnuto"
 
-#: enums.py:16 enums.py:23
+#: enums.py:10 enums.py:17
 msgid "cancelled"
 msgstr "zrušeno"
 
-#: enums.py:24
+#: enums.py:18
 msgid "waiting"
 msgstr "čeká"
 
-#: enums.py:25
+#: enums.py:19
 msgid "expired"
 msgstr "expirováno"
 
-#: models.py:54 models.py:339
+#: models.py:67 models.py:346
 msgid "key"
 msgstr "klíč"
 
-#: models.py:61 models.py:196 models.py:275 models.py:392
+#: models.py:74 models.py:209 models.py:288 models.py:399
 msgid "user"
 msgstr "uživatel"
 
-#: models.py:69 models.py:285 models.py:356
+#: models.py:82 models.py:298 models.py:363
 msgid "is active"
 msgstr "je aktivní"
 
-#: models.py:73 models.py:289
+#: models.py:86 models.py:302
 msgid "user agent"
 msgstr "user agent"
 
-#: models.py:79 models.py:346 models.py:446
+#: models.py:92 models.py:353 models.py:441
 msgid "expires at"
 msgstr "datum a čas expirace"
 
-#: models.py:85
+#: models.py:98
 msgid "IP"
 msgstr "IP"
 
-#: models.py:90 models.py:263 models.py:351 models.py:412
+#: models.py:103 models.py:276 models.py:358 models.py:407
 msgid "slug"
 msgstr "slug"
 
-#: models.py:95
+#: models.py:108 models.py:412
 msgid "backend"
-msgstr "bakcend"
+msgstr "backend"
 
-#: models.py:101
+#: models.py:114
 msgid "is allowed cookie"
 msgstr "povoleno cookie"
 
-#: models.py:105
+#: models.py:118
 msgid "is allowed header"
 msgstr "povoleny hlavičky"
 
-#: models.py:109
+#: models.py:122
 msgid "is authenticated"
 msgstr "ověřený"
 
-#: models.py:115
+#: models.py:128
 msgid "preserve cookie"
 msgstr "zachovat cookie"
 
-#: models.py:139 models.py:190 models.py:384
+#: models.py:134 models.py:322
+msgid "mobile device"
+msgstr "mobilní zařízení"
+
+#: models.py:152 models.py:203 models.py:391
 msgid "authorization token"
 msgstr "přihlašovací token"
 
-#: models.py:140
+#: models.py:153
 msgid "authorization tokens"
 msgstr "přihlašovací tokeny"
 
-#: models.py:206
+#: models.py:219
 msgid "authorization takeover"
 msgstr "převzetí přihlášení"
 
-#: models.py:207
+#: models.py:220
 msgid "authorization takeovers"
 msgstr "převzetí přihlášení"
 
-#: models.py:251
+#: models.py:264
 msgid "UUID"
 msgstr "UUID"
 
-#: models.py:257
+#: models.py:270
 msgid "name"
 msgstr "jméno"
 
-#: models.py:268
+#: models.py:281
 msgid "last login"
 msgstr "poslední přihlášení"
 
-#: models.py:280
+#: models.py:293
 msgid "login token"
 msgstr "přihlašovací token"
 
-#: models.py:295
+#: models.py:308
 msgid "is primary"
 msgstr "primární"
 
-#: models.py:310 models.py:400
+#: models.py:323
 msgid "mobile devices"
 msgstr "mobilní zařízení"
 
-#: models.py:360 models.py:440
+#: models.py:367 models.py:435
 msgid "data"
 msgstr "data"
 
-#: models.py:373
+#: models.py:380
 msgid "one time password"
 msgstr "jednorázové heslo"
 
-#: models.py:374 models.py:406
+#: models.py:381
 msgid "one time passwords"
 msgstr "jednorázová hesla"
 
-#: models.py:417
+#: models.py:418
 msgid "title"
 msgstr "název"
 
-#: models.py:423
+#: models.py:424
 msgid "description"
 msgstr "popis"
 
-#: models.py:428
+#: models.py:429
 msgid "result"
 msgstr "výsledek"
 
-#: models.py:434
-msgid "type"
-msgstr "typ"
-
-#: models.py:451
+#: models.py:446
 msgid "granted at"
-msgstr "uděleno"
+msgstr "datum a čas udělení"
 
-#: models.py:459
+#: models.py:454
 msgid "authorization request"
 msgstr "žádost o autorizaci"
 
-#: models.py:460
+#: models.py:455
 msgid "authorization requests"
 msgstr "žádosti o autorizace"

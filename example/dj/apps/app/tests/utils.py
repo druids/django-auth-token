@@ -18,14 +18,15 @@ from germanium.tools import (
     assert_is_instance, assert_is_not_none
 )
 
-from auth_token.enums import AuthorizationRequestType, AuthorizationRequestState
+from auth_token.enums import AuthorizationRequestState
 from auth_token.models import AnonymousUser, AnonymousAuthorizationToken, MobileDevice
 from auth_token.utils import (
-    compute_expires_at, hash_key, header_name_to_django, generate_key, generate_two_factor_key,
+    compute_expires_at, hash_key, header_name_to_django, generate_key,
     create_auth_header_value, login, logout, parse_auth_header_value, get_token_key_from_request,
     get_token, dont_enforce_csrf_checks, get_user_from_token, get_user, takeover, create_otp, deactivate_otp,
     get_valid_otp, check_otp, extend_otp, create_authorization_request, check_authorization_request,
-    grant_authorization_request, deny_authorization_request,cancel_authorization_request, authorization_create_new_otp
+    grant_authorization_request, deny_authorization_request,cancel_authorization_request, reset_authorization_request,
+    get_otp_qs
 )
 from auth_token.signals import authorization_granted, authorization_denied, authorization_cancelled
 
@@ -82,10 +83,6 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_equal(generate_key(characters='a', length=10), 10 * 'a')
         assert_equal(len(generate_key(length=10)), 10)
         assert_true(set(generate_key(characters='ab')) <= {'a', 'b'})
-
-    def test_generate_two_factor_key_should_generate_only_digit_keys_with_length_6(self):
-        assert_equal(len(generate_two_factor_key()), 6)
-        assert_true(set(generate_two_factor_key()) <= set(string.digits))
 
     def test_create_auth_header_value_should_return_value_with_bearer_prefix(self):
         assert_equal(create_auth_header_value('token'), 'Bearer token')
@@ -472,20 +469,23 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @freeze_time(now())
     @data_consumer('create_user')
+    @override_settings(AUTH_TOKEN_AUTHORIZATION_REQUEST_BACKENDS=[
+        'auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'])
     def test_create_authorization_request_should_create_new_authorization_with_otp(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request('test', user, 'test')
         assert_equal(authorization_request.slug, 'test')
         assert_equal(authorization_request.title, 'test')
         assert_is_none(authorization_request.description)
-        assert_true(authorization_request.one_time_passwords.get().is_active)
+        assert_equal(get_otp_qs(related_objects=[authorization_request], is_active=True).count(), 1)
         assert_equal(authorization_request.expires_at, now() + timedelta(hours=1))
 
     @freeze_time(now())
     @data_consumer('create_user')
     def test_create_authorization_request_should_create_new_authorization_with_no_default_values(self, user):
         authorization_request = create_authorization_request(
-            AuthorizationRequestType.OTP, 'slug', user, 'title', description='description', related_objects=[user],
-            data={'authorization': 'data'}, otp_key_generator=lambda: '1234', expiration=1
+            'slug', user, 'title', description='description', related_objects=[user],
+            data={'authorization': 'data'},  expiration=1,
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
         )
         assert_equal(authorization_request.slug, 'slug')
         assert_equal(authorization_request.user, user)
@@ -493,21 +493,20 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_equal(authorization_request.description, 'description')
         assert_equal(authorization_request.related_objects.count(), 1)
         assert_equal(authorization_request.related_objects.get().object, user)
-        assert_equal(authorization_request.secret_key, '1234')
-        assert_equal(authorization_request.one_time_passwords.get().expires_at, now() + timedelta(seconds=1))
+        assert_equal(
+            get_valid_otp(authorization_request.slug, related_objects=[authorization_request]).expires_at,
+            now() + timedelta(seconds=1)
+        )
         assert_equal(authorization_request.expires_at, now() + timedelta(seconds=1))
 
     @data_consumer('create_user')
     def test_create_authorization_request_with_device_type_should_create_it(self, user):
-        mobile_device = MobileDevice.objects.activate_or_create(uuid='E621E1F8C36C495', user=user)
         authorization_request = create_authorization_request(
-            AuthorizationRequestType.MOBILE_DEVICE, 'slug', user, 'title',
-            mobile_device=mobile_device
+            'slug', user, 'title',
+            backend_path='auth_token.authorization_request.backends.MobileDeviceAuthorizationRequestBackend'
         )
         assert_equal(authorization_request.slug, 'slug')
         assert_equal(authorization_request.title, 'title')
-        assert_true(authorization_request.mobile_devices.filter(pk=mobile_device.pk).exists())
-        assert_false(authorization_request.one_time_passwords.exists())
 
     @data_consumer('create_user')
     def test_check_authorization_request_with_mobile_device_type_should_return_right_value(self, user):
@@ -515,32 +514,13 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
             uuid='E621E1F8C36C495', user=user
         ).secret_password
         authorization_request = create_authorization_request(
-            AuthorizationRequestType.MOBILE_DEVICE, 'slug', user, 'title',
-            mobile_device=MobileDevice.objects.get()
+            'slug', user, 'title',
+            backend_path='auth_token.authorization_request.backends.MobileDeviceAuthorizationRequestBackend'
         )
 
         assert_false(check_authorization_request(authorization_request))
-        assert_false(check_authorization_request(authorization_request, mobile_device_id='E621E1F8C36C495'))
-        assert_true(check_authorization_request(authorization_request, mobile_device_id='E621E1F8C36C495',
-                                                mobile_login_token=mobile_device_login_token))
-
-    @data_consumer('create_user')
-    def test_check_authorization_request_without_mobile_device_type_should_return_right_value(self, user):
-        mobile_device_login_token = MobileDevice.objects.activate_or_create(
-            uuid='E621E1F8C36C495', user=user
-        ).secret_password
-        mobile_device_login_token2 = MobileDevice.objects.activate_or_create(
-            uuid='E621E1F8C36C496', user=self.create_user(username='invalid', email='invalid@test.cz')
-        ).secret_password
-        authorization_request = create_authorization_request(
-            AuthorizationRequestType.MOBILE_DEVICE, 'slug', user, 'title'
-        )
-
-        assert_false(check_authorization_request(authorization_request))
-        assert_false(check_authorization_request(authorization_request, mobile_device_id='E621E1F8C36C495'))
-        assert_false(check_authorization_request(authorization_request, mobile_device_id='E621E1F8C36C496',
-                                                 mobile_login_token=mobile_device_login_token2))
-        assert_true(check_authorization_request(authorization_request, mobile_device_id='E621E1F8C36C495',
+        assert_false(check_authorization_request(authorization_request, mobile_device_uuid='E621E1F8C36C495'))
+        assert_true(check_authorization_request(authorization_request, mobile_device_uuid='E621E1F8C36C495',
                                                 mobile_login_token=mobile_device_login_token))
 
     @data_consumer('create_user')
@@ -549,16 +529,19 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
             uuid='E621E1F8C36C495', user=user
         )
         authorization_request = create_authorization_request(
-            AuthorizationRequestType.MOBILE_DEVICE, 'slug', user, 'title',
-            mobile_device=mobile_device
+            'slug', user, 'title',
+            backend_path='auth_token.authorization_request.backends.MobileDeviceAuthorizationRequestBackend'
         )
-        assert_true(check_authorization_request(authorization_request, mobile_device_id='E621E1F8C36C495',
+        assert_true(check_authorization_request(authorization_request, mobile_device_uuid='E621E1F8C36C495',
                                                 mobile_login_token=mobile_device.secret_password))
 
     @freeze_time(now())
     @data_consumer('create_user')
     def test_check_authorization_request_with_otp_should_return_right_value(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
 
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         assert_false(check_authorization_request(authorization_request))
@@ -576,31 +559,35 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @freeze_time(now())
     @data_consumer('create_user')
-    def test_authorization_create_new_otp_should_create_new_otp_key_and_increase_expiration(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
-
-        assert_equal(authorization_request.one_time_passwords.count(), 1)
-
+    def test_authorization_reset_create_new_otp_key_and_increase_expiration(self, user):
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
+        assert_equal(get_otp_qs(related_objects=[authorization_request]).count(), 1)
         assert_equal(authorization_request.expires_at, now() + timedelta(hours=1))
 
         secret_key = authorization_request.secret_key
         assert_true(check_authorization_request(authorization_request, otp_secret_key=secret_key))
 
         with freeze_time(now() + timedelta(minutes=5)):
-            authorization_request = authorization_create_new_otp(authorization_request)
+            authorization_request = reset_authorization_request(authorization_request)
             assert_equal(authorization_request.expires_at, now() + timedelta(hours=1))
-            assert_equal(authorization_request.one_time_passwords.count(), 2)
-            assert_equal(authorization_request.one_time_passwords.filter(is_active=False).count(), 1)
+            assert_equal(get_otp_qs(related_objects=[authorization_request]).count(), 2)
+            assert_equal(get_otp_qs(related_objects=[authorization_request], is_active=True).count(), 1)
             assert_false(check_authorization_request(authorization_request, otp_secret_key=secret_key))
             assert_true(check_authorization_request(authorization_request,
                                                     otp_secret_key=authorization_request.secret_key))
 
-            authorization_request = authorization_create_new_otp(authorization_request, expiration=5)
+            authorization_request = reset_authorization_request(authorization_request, expiration=5)
             assert_equal(authorization_request.expires_at, now() + timedelta(seconds=5))
 
     @data_consumer('create_user')
     def test_grant_authorization_request_should_grant_authorization_and_call_receiver(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:
             authorization_granted.connect(mocked_receiver, sender='test')
@@ -610,7 +597,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
     def test_grant_authorization_request_should_grant_authorization_and_not_call_receiver_with_another_slug(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:
             authorization_granted.connect(mocked_receiver, sender='test2')
@@ -622,7 +612,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
     def test_grant_authorization_request_should_not_grant_already_granted_authorization(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         grant_authorization_request(authorization_request)
         assert_equal(authorization_request.refresh_from_db().state, AuthorizationRequestState.GRANTED)
@@ -631,7 +624,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
     def test_deny_authorization_request_should_not_deny_already_granted_authorization(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         grant_authorization_request(authorization_request)
         assert_equal(authorization_request.refresh_from_db().state, AuthorizationRequestState.GRANTED)
@@ -640,7 +636,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
     def test_deny_authorization_request_should_deny_authorization_and_call_receiver(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:
             authorization_denied.connect(mocked_receiver, sender='test')
@@ -650,7 +649,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
     def test_deny_authorization_request_should_deny_authorization_and_not_call_receiver_with_another_slug(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:
             authorization_denied.connect(mocked_receiver, sender='test2')
@@ -660,7 +662,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
     def test_cancel_authorization_request_should_not_cancel_already_granted_authorization(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         grant_authorization_request(authorization_request)
         assert_equal(authorization_request.refresh_from_db().state, AuthorizationRequestState.GRANTED)
@@ -669,7 +674,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     @data_consumer('create_user')
     def test_cancel_authorization_request_should_deny_authorization_and_call_receiver(self, user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:
             authorization_cancelled.connect(mocked_receiver, sender='test')
@@ -680,7 +688,10 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
     @data_consumer('create_user')
     def test_cancel_authorization_request_should_cancel_authorization_and_not_call_receiver_with_another_slug(self,
                                                                                                               user):
-        authorization_request = create_authorization_request(AuthorizationRequestType.OTP, 'test', user, 'test')
+        authorization_request = create_authorization_request(
+            'test', user, 'test',
+            backend_path='auth_token.authorization_request.backends.OTPAuthorizationRequestBackend'
+        )
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:
             authorization_cancelled.connect(mocked_receiver, sender='test2')

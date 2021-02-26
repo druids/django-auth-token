@@ -48,10 +48,11 @@ Get valid OTP
 
 Function ``auth_token.utils.get_valid_otp`` can be used to get valid OTP instance which secret key is valid with the given key. Function return OTP instance if key is valid, ``None`` otherwise.
 
-.. function:: get_valid_otp(slug, key)
+.. function:: get_valid_otp(slug, key=None, related_objects=None)
 
   * ``slug`` - string for OTP identification.
   * ``key`` - OTP secret key.
+  * ``related_objects`` - list of related objects which must be related with OTP.
 
 
 Extend valid OTP

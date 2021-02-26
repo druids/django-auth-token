@@ -14,27 +14,25 @@ To create authorization request you can use ``auth_token.utils.create_authorizat
 
 .. function:: create_authorization_request(type, slug, title, description=None, authorization_token=None, related_objects=None, data=None, otp_key_generator=None, otp_sender=None, mobile_device=None, expiration=None)
 
-  * ``type`` - authorization request type. It is value of ``auth_token.enums.AuthorizationRequestType`` enum. Values are ``OTP`` or ``MOBILE_DEVICE``.
   * ``slug`` - string identifier of authorization request.
   * ``user`` - owner of the authorization.
   * ``title`` - human readable string which describes authorization request.
   * ``description`` - longer human readable description of authorization request.
+  * ``authorization_token`` - authorization request can be valid only for specific authorization token.
+  * ``related_objects`` - related model instances which will be stored with authorization request.
   * ``data`` - data which will be stored with authorization request in the JSON format.
-  * ``otp_key_generator`` - function which generates OTP code. For null value default generator is used. Value is used only for ``OTP`` authorization type.
-  * ``otp_sender`` - function sends OTP code to the user. Value is used only for ``OTP`` authorization type. Function receives two arguments ``auhorization_request`` and ``otp_code``.
-  * ``mobile_device`` - mobile device instance which can authorize the request.
   * ``expiration`` - authorization token expiration time in seconds, default expiration will be used for None value.
+  * ``backend_path`` - path authorization request backend class with authentication implementation.
 
 
-Create new OTP to authorization request
----------------------------------------
+Reset authorization request
+---------------------------
 
-To create new OTP to authorization request you can use ``auth_token.utils.authorization_create_new_otp`` function. It generates new OTP for waiting request in type ``AuthorizationRequestType.OTP`` and increase its expiration.
+To reset authorization request for example with purpose to create new OTP you can use ``auth_token.utils.reset_authorization_request`` function.
 
-.. function:: check_authorization_request(request, authorization_request, mobile_device_id=None, mobile_login_token=None, otp_secret_key=None)
+.. function:: reset_authorization_request(authorization_request, expiration=None)
 
   * ``authorization_request`` - authorization request only with type OTP.
-  * ``otp_key_generator``  - function which generates OTP code. For null value default generator is used.
   * ``expiration`` - expiration time in seconds. Empty value means that original expiration time will be used.
 
 
@@ -43,12 +41,10 @@ Check authorization request
 
 To check if authorization request can be granted for user with input secret data can be done with ``auth_token.utils.check_authorization_request`` function. Function returns ``True`` if authorization can be granted, ``False`` elsewhere.
 
-.. function:: check_authorization_request(request, authorization_request, mobile_device_id=None, mobile_login_token=None, otp_secret_key=None)
+.. function:: check_authorization_request(authorization_request, **kwargs)
 
   * ``authorization_request`` - authorization request to be authorized.
-  * ``mobile_device_id`` - UUID of mobile device which will authorize the request. Input is only used for ``MOBILE_DEVICE`` authorization request type.
-  * ``mobile_login_token`` - secret token mobile device which will authorize the request. Input is only used for ``MOBILE_DEVICE`` authorization request type.
-  * ``otp_secret_key`` - secret key of OTP. Input is only used for ``OTP`` authorization request type.
+  * ``**kwargs`` - data used for request authentication (for example otp_secret_key)
 
 Signals
 -------
@@ -90,3 +86,14 @@ Function ``auth_token.utils.cancel_authorization_request`` is used to cancel aut
 .. function:: cancel_authorization_request(authorization_request)
 
   * ``authorization_request`` - authorization request to deny.
+
+Authorization request backend
+-----------------------------
+
+``auth_token.authorization_request.backend.BaseAuthorizationRequestBackend`` is abstract class which is used for implementation concrete logic for authorization request authentication.::
+
+Library provides two classes which implements it:
+
+* ``auth_token.authorization_request.backend.OTPAuthorizationRequestBackend`` - autentication via OTP
+* ``auth_token.authorization_request.backend.MobileDeviceAuthorizationRequestBackend`` - autentication via mobile device
+

@@ -10,6 +10,7 @@ from operator import and_ as AND
 
 import import_string
 
+from django.core.exceptions import ImproperlyConfigured
 from django.conf import settings as django_settings
 from django.contrib.auth import _get_backends, load_backend
 from django.contrib.auth.models import AnonymousUser
@@ -21,10 +22,30 @@ from django.utils.crypto import salted_hmac
 from django.utils.timezone import now
 
 from .config import settings
-from .enums import AuthorizationRequestType, AuthorizationRequestState, AuthorizationRequestResult
+from .enums import AuthorizationRequestState, AuthorizationRequestResult
 from .signals import authorization_denied, authorization_granted, authorization_cancelled
 
 from ipware.ip import get_client_ip
+
+
+def _load_request_backend(path):
+    return import_string(path)
+
+
+def get_authorization_request_backends():
+    return {
+        backend_path: _load_request_backend(backend_path)
+        for backend_path in settings.AUTHORIZATION_REQUEST_BACKENDS
+    }
+
+
+def get_authorization_backend(path, raise_exception=False):
+    backends = get_authorization_request_backends()
+
+    backend = backends.get(path, None)
+    if not backend and raise_exception:
+        raise ImproperlyConfigured('Missing authorization request backend with path {}'.format(path))
+    return backend() if backend else None
 
 
 def compute_expires_at(expiration):
@@ -71,7 +92,7 @@ def header_name_to_django(header_name):
     return '_'.join(('HTTP', header_name.replace('-', '_').upper()))
 
 
-def generate_key(characters=None, length=None):
+def generate_key(characters=string.ascii_letters + string.digits, length=20):
     """
     Generate random string with given characters and length.
     Args:
@@ -81,18 +102,16 @@ def generate_key(characters=None, length=None):
     Returns:
         generated random key.
     """
-    characters = string.ascii_letters + string.digits if characters is None else characters
-    length = 20 if length is None else length
     return ''.join(random.choices(characters, k=length))
 
 
-def generate_two_factor_key():
+def generate_otp_key():
     """
-    Default two factor key generator.
-    Returns:
-        Key with length 5 which contains only numbers.
+    Default OTP key generator.
     """
-    return generate_key(characters=string.digits, length=6)
+    return generate_key(
+        characters=settings.OTP_DEFAULT_GENERATOR_CHARACTERS, length=settings.OTP_DEFAULT_GENERATOR_LENGTH
+    )
 
 
 def login(request, user, auth_slug=None, related_objs=None, backend=None, allowed_cookie=True,
@@ -390,7 +409,7 @@ def create_otp(slug, related_objects=None, data=None, key_generator=None, expira
     otp = OneTimePassword.objects.create(
         slug=slug,
         key_generator=key_generator,
-        expires_at=compute_expires_at(expiration or settings.DEFAULT_OTP_AGE),
+        expires_at=compute_expires_at(expiration or settings.OTP_DEFAULT_AGE),
         data=data
     )
     if related_objects:
@@ -398,24 +417,24 @@ def create_otp(slug, related_objects=None, data=None, key_generator=None, expira
     return otp
 
 
-def get_valid_otp(slug, key=None, related_objects=None):
+def get_otp_qs(slug=None, key=None, related_objects=None, **kwargs):
     """
-    Find and return valid OTP with a given slug and key.
+    Return OTP queryset with slug, key or related objects
     Args:
         slug: string for OTP identification.
         key: key used for validation of OTP.
-        related_objects: list of related objects which must be related with OTP.
+        related_objects: objects related with OTP.
+        **kwargs: extra filter kwargs.
 
     Returns:
-        valid OTP instance or None value.
+        OneTimePassword model queryset
     """
     from .models import OneTimePassword
 
-    otp_qs = OneTimePassword.objects.filter(
-        slug=slug,
-        is_active=True,
-        expires_at__gt=now()
-    )
+    otp_qs = OneTimePassword.objects.filter(**kwargs)
+
+    if slug:
+        otp_qs = otp_qs.filter(slug=slug)
 
     if key:
         otp_qs = otp_qs.filter(key=hash_key(key, salt=slug))
@@ -429,8 +448,27 @@ def get_valid_otp(slug, key=None, related_objects=None):
                 }) for obj in related_objects
             ))
         )
+    return otp_qs
 
-    return otp_qs.first('-created_at')
+
+def get_valid_otp(slug, key=None, related_objects=None):
+    """
+    Find and return valid OTP with a given slug and key.
+    Args:
+        slug: string for OTP identification.
+        key: key used for validation of OTP.
+        related_objects: list of related objects which must be related with OTP.
+
+    Returns:
+        valid OTP instance or None value.
+    """
+    return get_otp_qs(
+        slug=slug,
+        key=key,
+        related_objects=related_objects,
+        is_active=True,
+        expires_at__gt=now()
+    ).first('-created_at')
 
 
 def check_otp(slug, key):
@@ -465,13 +503,11 @@ def extend_otp(slug, key, expiration=None):
         return True
 
 
-def create_authorization_request(type, slug, user, title, description=None, authorization_token=None,
-                                 related_objects=None, data=None, otp_key_generator=None, mobile_device=None,
-                                 expiration=None):
+def create_authorization_request(slug, user, title, description=None, authorization_token=None,
+                                 related_objects=None, data=None, expiration=None, backend_path=None):
     """
-    Create authorization request with a given type slug, title and description.
+    Create authorization request with a given slug, title and description.
     Args:
-        type: authorization request type OTP or MOBILE_DEVICE.
         slug: string for authorization request identification.
         user: owner of authorization request.
         title: human readable title for a client.
@@ -479,15 +515,23 @@ def create_authorization_request(type, slug, user, title, description=None, auth
         authorization_token: authorization request can be valid only for specific authorization token.
         related_objects: related model instances which will be stored with authorization request.
         data: extra authorization request data.
-        otp_key_generator: OTP key generator. Only used for OTP type.
-        mobile_device: mobile device which can grant/deny authorization. Only used for DEVICE type.
         expiration: expiration time in seconds.
+        backend_path: path authorization request backend class with authentication implementation.
 
     Returns:
-        new authorization token.
+        new authorization request.
     """
     from .models import AuthorizationRequest
 
+    if not backend_path:
+        if len(settings.AUTHORIZATION_REQUEST_BACKENDS) == 1:
+            backend_path = settings.AUTHORIZATION_REQUEST_BACKENDS[0]
+        else:
+            raise ImproperlyConfigured(
+                'You must select backend_path if more than one AUTH_TOKEN_AUTHORIZATION_REQUEST_BACKENDS are set'
+            )
+
+    backend = get_authorization_backend(backend_path, raise_exception=True)
     expiration = expiration or settings.DEFAULT_AUTHORIZATION_REQUEST_AGE
 
     authorization_request = AuthorizationRequest.objects.create(
@@ -495,78 +539,45 @@ def create_authorization_request(type, slug, user, title, description=None, auth
         user=user,
         title=title,
         description=description,
-        type=type,
         authorization_token=authorization_token,
         data=data,
-        expires_at=compute_expires_at(expiration)
+        expires_at=compute_expires_at(expiration),
+        backend=backend_path
     )
     if related_objects:
         authorization_request.related_objects.add(*related_objects)
 
-    if type == AuthorizationRequestType.OTP:
-        otp = create_otp(slug, key_generator=otp_key_generator, expiration=expiration)
-        authorization_request.one_time_passwords.add(otp)
-        authorization_request.secret_key = otp.secret_key
-    else:
-        if mobile_device:
-            authorization_request.mobile_devices.add(mobile_device)
-
+    backend.initialize(authorization_request)
     return authorization_request
 
 
-def authorization_create_new_otp(authorization_request, otp_key_generator=None, expiration=None):
+def reset_authorization_request(authorization_request, expiration=None):
     """
-    Creates new OTP for authorization request and increase its expiration.
+    Reset authorization request and increase its expiration.
     Args:
         authorization_request: authorization request where new OTP will be created.
-        otp_key_generator: function which generates OTP.
         expiration: expiration time in seconds. Empty value means that original expiration time will be used.
 
     Returns:
-        AuthorizationRequest instance with new OTP
+        AuthorizationRequest instance with new authorization data
     """
-    assert authorization_request.type == AuthorizationRequestType.OTP
     assert authorization_request.result is None
+    backend = get_authorization_backend(authorization_request.backend, raise_exception=True)
 
     if expiration is None:
         expiration = (authorization_request.expires_at - authorization_request.created_at).total_seconds()
 
     authorization_request.change_and_save(expires_at=compute_expires_at(expiration))
-    otp = create_otp(authorization_request.slug, key_generator=otp_key_generator, expiration=expiration)
-    authorization_request.one_time_passwords.all().change_and_save(is_active=False)
-    authorization_request.one_time_passwords.add(otp)
-    authorization_request.secret_key = otp.secret_key
+    backend.initialize(authorization_request)
     return authorization_request
 
 
-def _get_valid_mobile_device(mobile_device_id, mobile_login_token):
-    """
-    Retrun mobile device with valid ID and token.
-    Args:
-        mobile_device_id: mobile device ID.
-        mobile_login_token: mobil device secret token.
-
-    Returns:
-        valid mobile device or None.
-    """
-    from .models import MobileDevice
-
-    for mobile_device in MobileDevice.objects.filter(uuid=mobile_device_id, is_active=True):
-        if mobile_device.check_password(mobile_login_token):
-            return mobile_device
-
-    return None
-
-
-def check_authorization_request(authorization_request, mobile_device_id=None, mobile_login_token=None,
-                                otp_secret_key=None):
+def check_authorization_request(authorization_request, **kwargs):
     """
     Check if data send by client is valid with autorization request and access can be granted.
     Args:
         authorization_request: validated authorization request
-        mobile_device_id: mobile device ID which can verify authorization request. Only valid for DEVICE type.
-        mobile_login_token: mobile device token which can verify authorization request. Only valid for DEVICE type.
-        otp_secret_key: OTP code which can verify authorization request. Only valid for OTP type.
+        **kwargs: data used for request authentication.
 
     Returns:
         True for valid input data, False otherwise.
@@ -574,29 +585,11 @@ def check_authorization_request(authorization_request, mobile_device_id=None, mo
     if authorization_request.state != AuthorizationRequestState.WAITING:
         return False
 
-    if authorization_request.type == AuthorizationRequestType.OTP:
-        return bool(otp_secret_key) and (
-            any(
-                check_otp(otp.slug, otp_secret_key) for otp in authorization_request.one_time_passwords.filter(
-                    is_active=True
-                )
-            ) or (
-                    settings.AUTHORIZATION_REQUEST_OTP_DEBUG_CODE
-                    and settings.AUTHORIZATION_REQUEST_OTP_DEBUG_CODE == otp_secret_key
-            )
-        )
-    else:
-        valid_mobile_device = None
-        if mobile_device_id and mobile_login_token:
-            valid_mobile_device = _get_valid_mobile_device(mobile_device_id, mobile_login_token)
+    backend = get_authorization_backend(authorization_request.backend, raise_exception=False)
 
-        return (
-            valid_mobile_device is not None and valid_mobile_device.user == authorization_request.user
-            and (
-                    not authorization_request.mobile_devices.exists()
-                    or authorization_request.mobile_devices.filter(pk=valid_mobile_device.pk).exists()
-            )
-        )
+    if not backend:
+        return False
+    return backend.authenticate(authorization_request, **kwargs)
 
 
 def grant_authorization_request(authorization_request):
@@ -607,8 +600,9 @@ def grant_authorization_request(authorization_request):
     """
     assert authorization_request.result is None
 
-    if type == AuthorizationRequestType.OTP:
-        authorization_request.one_time_password.change_and_save(is_active=False)
+    backend = get_authorization_backend(authorization_request.backend, raise_exception=False)
+    if backend:
+        backend.grant(authorization_request)
     authorization_request.change_and_save(
         result=AuthorizationRequestResult.GRANTED,
         granted_at=now()
@@ -624,8 +618,9 @@ def deny_authorization_request(authorization_request):
     """
     assert authorization_request.result is None
 
-    if type == AuthorizationRequestType.OTP:
-        authorization_request.one_time_password.change_and_save(is_active=False)
+    backend = get_authorization_backend(authorization_request.backend, raise_exception=False)
+    if backend:
+        backend.deny(authorization_request)
     authorization_request.change_and_save(result=AuthorizationRequestResult.DENIED)
     authorization_denied.send(sender=authorization_request.slug, authorization_request=authorization_request)
 
@@ -638,7 +633,8 @@ def cancel_authorization_request(authorization_request):
     """
     assert authorization_request.result is None
 
-    if type == AuthorizationRequestType.OTP:
-        authorization_request.one_time_password.change_and_save(is_active=False)
+    backend = get_authorization_backend(authorization_request.backend, raise_exception=False)
+    if backend:
+        backend.cancel(authorization_request)
     authorization_request.change_and_save(result=AuthorizationRequestResult.CANCELLED)
     authorization_cancelled.send(sender=authorization_request.slug, authorization_request=authorization_request)

@@ -20,7 +20,7 @@ from generic_m2m_field.models import GenericManyToManyField
 from auth_token.utils import compute_expires_at, generate_key, hash_key
 from auth_token.config import settings
 
-from .enums import AuthorizationRequestType, AuthorizationRequestState, AuthorizationRequestResult
+from .enums import AuthorizationRequestState, AuthorizationRequestResult
 
 
 KEY_SALT = 'django-auth-token'
@@ -30,19 +30,32 @@ def compute_authorization_token_expires_at(expiration=None):
     return compute_expires_at(expiration or settings.DEFAULT_TOKEN_AGE)
 
 
-class AuthorizationTokenManager(SmartManager):
+def generate_token_key():
+    return generate_key(length=settings.LENGTH)
 
-    def create(self, **kwargs):
+
+class BaseHashKeyManager(SmartManager):
+
+    def _hash_key(self, key, **kwargs):
+        return hash_key(key)
+
+    def create(self, key_generator, **kwargs):
         for attempt in range(settings.MAX_RANDOM_KEY_ITERATIONS + 1):
             try:
-                key = generate_key(length=40)
-                hashed_key = hash_key(key)
-                authorization_token = super().create(key=hashed_key, **kwargs)
-                authorization_token.secret_key = key
-                return authorization_token
+                key = key_generator()
+                hashed_key = self._hash_key(key, **kwargs)
+                obj = super().create(key=hashed_key, **kwargs)
+                obj.secret_key = key
+                return obj
             except IntegrityError:
                 if attempt > settings.MAX_RANDOM_KEY_ITERATIONS:
-                    raise IntegrityError('Could not produce unique key for authorization token')
+                    raise IntegrityError('Could not produce unique key')
+
+
+class AuthorizationTokenManager(BaseHashKeyManager):
+
+    def create(self, **kwargs):
+        return super().create(generate_token_key, **kwargs)
 
 
 class AuthorizationToken(SmartModel):
@@ -149,11 +162,7 @@ class AuthorizationToken(SmartModel):
 
     @property
     def time_to_expiration(self):
-        return self.expires_at - timezone.now()
-
-    @property
-    def str_time_to_expiration(self):
-        return str(self.time_to_expiration) if self.time_to_expiration.total_seconds() > 0 else '00:00:00'
+        return max(timedelta(seconds=0), self.expires_at - timezone.now())
 
 
 class AnonymousAuthorizationToken:
@@ -219,7 +228,7 @@ class MobileDeviceQuerySet(SmartQuerySet):
         It creates a new MobileDevice with auto generated token for the device and returns token.
         If MobileDevice with same UUID exists MobileDeviceAlreadyExists is raised.
         """
-        secret_password = generate_key(length=64)
+        secret_password = generate_key(length=settings.MOBILE_DEVICE_SECRET_PASSWORD_LENGTH)
         defaults = {
             'login_token': make_password(secret_password),
             'user_agent': user_agent[:256],
@@ -315,19 +324,13 @@ class MobileDevice(SmartModel):
         return check_password(str(token), self.login_token)
 
 
-class OneTimePasswordManager(SmartManager):
+class OneTimePasswordManager(BaseHashKeyManager):
+
+    def _hash_key(self, key, slug, **kwargs):
+        return hash_key(key, salt=slug)
 
     def create(self, slug, key_generator, **kwargs):
-        for attempt in range(settings.MAX_RANDOM_KEY_ITERATIONS + 1):
-            try:
-                key = key_generator()
-                hashed_key = hash_key(key, salt=slug)
-                obj = super().create(slug=slug, key=hashed_key, **kwargs)
-                obj.secret_key = key
-                return obj
-            except IntegrityError:
-                if attempt > settings.MAX_RANDOM_KEY_ITERATIONS:
-                    raise IntegrityError('Could not produce unique key for authorization token')
+        return super().create(key_generator, slug=slug, **kwargs)
 
 
 class OneTimePassword(SmartModel):
@@ -396,22 +399,16 @@ class AuthorizationRequest(SmartModel):
         blank=False,
         on_delete=models.CASCADE
     )
-    mobile_devices = models.ManyToManyField(
-        verbose_name=_('mobile devices'),
-        to=MobileDevice,
-        related_name='authorization_requests',
-        blank=True
-    )
-    one_time_passwords = models.ManyToManyField(
-        verbose_name=_('one time passwords'),
-        to=OneTimePassword,
-        related_name='authorization_request',
-        blank=True
-    )
     slug = models.SlugField(
         verbose_name=_('slug'),
         null=True,
         blank=True
+    )
+    backend = models.CharField(
+        verbose_name=_('backend'),
+        max_length=250,
+        null=False,
+        blank=False
     )
     title = models.CharField(
         verbose_name=_('title'),
@@ -429,12 +426,6 @@ class AuthorizationRequest(SmartModel):
         enum=AuthorizationRequestResult,
         null=True,
         blank=True
-    )
-    type = NumEnumField(
-        verbose_name=_('type'),
-        enum=AuthorizationRequestType,
-        null=False,
-        blank=False
     )
     data = models.JSONField(
         verbose_name=_('data'),

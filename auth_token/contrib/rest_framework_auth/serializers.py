@@ -54,7 +54,7 @@ class MobileAuthTokenSerializer(serializers.Serializer):
         if uuid and token:
             # DeviceBackend is called here
             user = authenticate(request=self.context.get('request'),
-                                mobile_device_id=uuid, mobile_login_token=token)
+                                mobile_device_uuid=uuid, mobile_login_token=token)
 
             if not user:
                 raise serializers.ValidationError(
