@@ -27,7 +27,6 @@ class AuthenticationMixin:
         self.user_cache = None
         super().__init__(*args, **kwargs)
 
-        # Set the label for the "username" field.
         self.init_username_field()
         self.init_password_field()
 
