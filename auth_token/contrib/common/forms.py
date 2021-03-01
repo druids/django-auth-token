@@ -2,6 +2,8 @@ from django import forms
 from django.utils.translation import ugettext, ugettext_lazy as _
 from django.contrib.auth import authenticate, get_user_model
 
+from auth_token.config import settings
+
 
 class AuthenticationMixin:
     """
@@ -26,10 +28,13 @@ class AuthenticationMixin:
         super().__init__(*args, **kwargs)
 
         # Set the label for the "username" field.
+        self.init_username_field()
+        self.init_password_field()
+
+    def init_username_field(self):
         user_model = self.get_user_model()
         self.username_field = user_model._meta.get_field(user_model.USERNAME_FIELD)
         self.fields[self.username_field_name] = forms.CharField(max_length=254)
-        self.init_password_field()
         if self.fields[self.username_field_name].label is None:
             self.fields[self.username_field_name].label = self.username_field.verbose_name
 
@@ -80,7 +85,8 @@ class TokenAuthenticationMixin(AuthenticationMixin):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['permanent'] = forms.BooleanField(label=_('Remember user'), required=False)
+        if settings.FORM_COOKIE_PERMANENT:
+            self.fields['permanent'] = forms.BooleanField(label=_('Remember user'), required=False)
 
     def is_permanent(self):
         return self.cleaned_data.get('permanent', False)

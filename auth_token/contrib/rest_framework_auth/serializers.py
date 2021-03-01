@@ -1,7 +1,7 @@
 from django.contrib.auth import authenticate
 from django.utils.translation import ugettext_lazy as _
 
-from auth_token.models import DeviceKey, DeviceKeyAlreadyExistsException
+from auth_token.models import MobileDevice, MobileDeviceAlreadyExists
 
 from rest_framework import serializers
 
@@ -54,7 +54,7 @@ class MobileAuthTokenSerializer(serializers.Serializer):
         if uuid and token:
             # DeviceBackend is called here
             user = authenticate(request=self.context.get('request'),
-                                device_uuid=uuid, mobile_login_token=token)
+                                mobile_device_uuid=uuid, mobile_login_token=token)
 
             if not user:
                 raise serializers.ValidationError(
@@ -75,8 +75,10 @@ class MobileAuthTokenRegisterSerializer(serializers.Serializer):
     def validate(self, attrs):
         uuid = attrs.get('uuid')
         try:
-            attrs['token'] = DeviceKey.objects.create_token(uuid=uuid, user=self.context['request'].user)
-        except DeviceKeyAlreadyExistsException:
+            attrs['token'] = MobileDevice.objects.activate_or_create(
+                uuid=uuid, user=self.context['request'].user
+            ).secret_password
+        except MobileDeviceAlreadyExists:
             raise serializers.ValidationError(
                 _('Device key was already registered.'), code='registration')
         return attrs

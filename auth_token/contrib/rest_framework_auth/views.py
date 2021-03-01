@@ -63,7 +63,7 @@ class LoginAuthToken(APIView):
             request._request, user, not serializer.validated_data.get('permanent', False),
             allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
         )
-        return Response({'token': request._request.token.key})
+        return Response({'token': request._request.token.secret_key})
 
 
 class MobileLoginAuthToken(APIView):
@@ -109,7 +109,7 @@ class MobileLoginAuthToken(APIView):
             request._request, user,
             allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
         )
-        return Response({'token': request._request.token.key})
+        return Response({'token': request._request.token.secret_key})
 
 
 class LogoutAuthToken(APIView):

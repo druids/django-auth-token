@@ -5,122 +5,183 @@ from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AnonymousUser
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models, IntegrityError, transaction
 from django.db.utils import IntegrityError
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
+from enumfields import NumEnumField
+
+from chamber.models import SmartModel, SmartQuerySet, SmartManager
+
+from generic_m2m_field.models import GenericManyToManyField
+
+from auth_token.utils import compute_expires_at, generate_key, hash_key
 from auth_token.config import settings
-from auth_token.utils import generate_key
+
+from .enums import AuthorizationRequestState, AuthorizationRequestResult
 
 
-class Token(models.Model):
+KEY_SALT = 'django-auth-token'
+
+
+def compute_authorization_token_expires_at(expiration=None):
+    return compute_expires_at(expiration or settings.DEFAULT_TOKEN_AGE)
+
+
+def generate_token_key():
+    return generate_key(length=settings.LENGTH)
+
+
+class BaseHashKeyManager(SmartManager):
+
+    def _hash_key(self, key, **kwargs):
+        return hash_key(key)
+
+    def create(self, key_generator, **kwargs):
+        for attempt in range(settings.MAX_RANDOM_KEY_ITERATIONS + 1):
+            try:
+                key = key_generator()
+                hashed_key = self._hash_key(key, **kwargs)
+                obj = super().create(key=hashed_key, **kwargs)
+                obj.secret_key = key
+                return obj
+            except IntegrityError:
+                if attempt > settings.MAX_RANDOM_KEY_ITERATIONS:
+                    raise IntegrityError('Could not produce unique key')
+
+
+class AuthorizationTokenManager(BaseHashKeyManager):
+
+    def create(self, **kwargs):
+        return super().create(generate_token_key, **kwargs)
+
+
+class AuthorizationToken(SmartModel):
     """
     The default authorization token model.
     """
 
-    TWO_FACTOR_CODE_LENGTH = 5
-    TWO_FACTOR_CODE_SALT = 'two-factor'
+    key = models.CharField(
+        verbose_name=_('key'),
+        max_length=128,
+        primary_key=True,
+        null=False,
+        blank=False
+    )
+    user = models.ForeignKey(
+        verbose_name=_('user'),
+        to=django_settings.AUTH_USER_MODEL,
+        related_name='authorization_tokens',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE
+    )
+    is_active = models.BooleanField(
+        verbose_name=_('is active'),
+        default=True
+    )
+    user_agent = models.CharField(
+        verbose_name=_('user agent'),
+        max_length=256,
+        null=True,
+        blank=True
+    )
+    expires_at = models.DateTimeField(
+        verbose_name=_('expires at'),
+        null=False,
+        blank=False,
+        default=compute_authorization_token_expires_at
+    )
+    ip = models.GenericIPAddressField(
+        verbose_name=_('IP'),
+        null=False,
+        blank=False
+    )
+    auth_slug = models.SlugField(
+        verbose_name=_('slug'),
+        null=True,
+        blank=True
+    )
+    backend = models.CharField(
+        verbose_name=_('backend'),
+        max_length=250,
+        null=False,
+        blank=False
+    )
+    allowed_cookie = models.BooleanField(
+        verbose_name=_('is allowed cookie'),
+        default=True
+    )
+    allowed_header = models.BooleanField(
+        verbose_name=_('is allowed header'),
+        default=True
+    )
+    is_authenticated = models.BooleanField(
+        verbose_name=_('is authenticated'),
+        null=False,
+        blank=False,
+        default=False
+    )
+    preserve_cookie = models.BooleanField(
+        verbose_name=_('preserve cookie'),
+        null=False,
+        blank=False,
+        default=False
+    )
+    mobile_device = models.ForeignKey(
+        verbose_name=_('mobile device'),
+        to='MobileDevice',
+        related_name='authorization_tokens',
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
 
-    key = models.CharField(max_length=40, primary_key=True, null=False, blank=False)
-    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, related_name='auth_token', null=False, blank=False,
-                             on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False)
-    last_access = models.DateTimeField(auto_now=True, null=False, blank=False)
-    is_active = models.BooleanField(default=True)
-    # It is possiple use https://github.com/selwin/django-user_agents/tree/master/django_user_agents or
-    # https://github.com/selwin/python-user-agents for parse
-    # Limited size to 256
-    user_agent = models.CharField(max_length=256, null=True, blank=True)
-    expiration = models.BooleanField(default=True)
-    ip = models.GenericIPAddressField(null=False, blank=False)
-    auth_slug = models.SlugField(null=True, blank=True)
-    backend = models.CharField(max_length=255, null=False, blank=False)
-    allowed_cookie = models.BooleanField(default=True)
-    allowed_header = models.BooleanField(default=True)
-    is_authenticated = models.BooleanField(null=False, blank=False, default=False)
-    two_factor_code = models.CharField(null=True, blank=True, max_length=128)
+    related_objects = GenericManyToManyField()
 
     is_from_header = False
     is_from_cookie = False
+    secret_key = None
+    is_anonymous = False
+
+    objects = AuthorizationTokenManager()
+
+    class Meta:
+        verbose_name = _('authorization token')
+        verbose_name_plural = _('authorization tokens')
 
     @property
     def active_takeover(self):
         return self.user_takeovers.filter(is_active=True).last()
 
-    def save(self, *args, **kwargs):
-        if not self.key:
-             self.key = self._generate_unique_key()
-        return super().save(*args, **kwargs)
-
-    def _generate_unique_key(self):
-        """
-        Generate random unique token key.
-        """
-        key = generate_key()
-        try_generator_iterations = 1
-        while self.__class__.objects.filter(key=key).exists():
-            if try_generator_iterations > settings.MAX_RANDOM_KEY_ITERATIONS:
-                raise IntegrityError('Could not produce unique key for authorization token')
-            try_generator_iterations += 1
-            key = generate_key()
-        return key
-
-    def _get_token_age(self):
-        return self.expiration and settings.DEFAULT_TOKEN_AGE or settings.MAX_TOKEN_AGE
-
     @property
     def is_expired(self):
-        return self.last_access + timedelta(seconds=self._get_token_age()) < timezone.now()
+        return self.expires_at < timezone.now()
 
     @property
     def time_to_expiration(self):
-        return (self.last_access + timedelta(seconds=self._get_token_age())) - timezone.now()
-
-    @property
-    def str_time_to_expiration(self):
-        return str(self.time_to_expiration) if self.time_to_expiration.total_seconds() > 0 else '00:00:00'
-
-    def __str__(self):
-        return self.key
+        return max(timedelta(seconds=0), self.expires_at - timezone.now())
 
 
-class TokenRelatedObject(models.Model):
-    """
-    Generic relation to objects related with authorization token
-    """
-
-    token = models.ForeignKey(Token, related_name='related_objects', on_delete=models.CASCADE)
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.TextField()
-    content_object = GenericForeignKey('content_type', 'object_id')
-
-
-class UserTokenTakeover(models.Model):
-    """
-    The model allows to change user without token change
-    """
-
-    token = models.ForeignKey(Token, related_name='user_takeovers', on_delete=models.CASCADE)
-    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, related_name='user_token_takeovers', null=False,
-                             blank=False, on_delete=models.CASCADE)
-    is_active = models.BooleanField()
-
-
-class AnonymousToken:
+class AnonymousAuthorizationToken:
 
     key = None
     user = AnonymousUser
-    creted_at = None
+    created_at = None
     is_active = False
     user_agent = None
-    is_expired = True
+    expiration = None
     is_from_header = False
     is_from_cookie = False
     active_takeover = None
     backend = None
     allowed_cookie = False
     allowed_header = False
+    secret_key = None
+    is_authenticated = False
+    is_anonymous = True
 
     def save(self):
         raise NotImplementedError
@@ -129,55 +190,275 @@ class AnonymousToken:
         raise NotImplementedError
 
 
-class DeviceKeyAlreadyExistsException(Exception):
+class UserAuthorizationTokenTakeover(SmartModel):
+    """
+    The model allows to change user without token change
+    """
+
+    token = models.ForeignKey(
+        verbose_name=_('authorization token'),
+        to=AuthorizationToken,
+        related_name='user_takeovers',
+        on_delete=models.CASCADE
+    )
+    user = models.ForeignKey(
+        verbose_name=_('user'),
+        to=django_settings.AUTH_USER_MODEL,
+        related_name='user_token_takeovers',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE
+    )
+    is_active = models.BooleanField()
+
+    class Meta:
+        verbose_name = _('authorization takeover')
+        verbose_name_plural = _('authorization takeovers')
+
+
+class MobileDeviceAlreadyExists(Exception):
     pass
 
 
-class DeviceKeyQuerySet(models.QuerySet):
+class MobileDeviceQuerySet(SmartQuerySet):
 
-    def create_token(self, uuid, user, user_agent=''):
+    def activate_or_create(self, uuid, user, user_agent='', name=None, slug=None, is_primary=True):
         """
         This method must be called when user is authenticated.
-        It creates a new DeviceKey with auto generated token for the device and returns token.
-        If DeviceKey with same UUID exists DeviceKeyAlreadyExistsException is raised.
+        It creates a new MobileDevice with auto generated token for the device and returns token.
+        If MobileDevice with same UUID exists MobileDeviceAlreadyExists is raised.
         """
-        token = generate_key(length=64)
-        is_created_new_device_key = self.get_or_create(
-            uuid=uuid, user=user,
-            defaults={
-                'login_token': make_password(token),
-                'user_agent': user_agent[:256],
-                'is_active': True
-            }
-        )[1]
-        if is_created_new_device_key:
-            return token
+        secret_password = generate_key(length=settings.MOBILE_DEVICE_SECRET_PASSWORD_LENGTH)
+        defaults = {
+            'login_token': make_password(secret_password),
+            'user_agent': user_agent[:256],
+            'is_active': True,
+            'name': name,
+            'slug': slug,
+            'is_primary': is_primary
+        }
+        mobile_device, is_created_mobile_device = self.get_or_create(
+            uuid=uuid,
+            user=user,
+            defaults=defaults
+        )
+        mobile_device.secret_password = secret_password
+        if not is_created_mobile_device and not mobile_device.is_active:
+            return mobile_device.change_and_save(**defaults)
+        elif is_created_mobile_device:
+            return mobile_device
         else:
-            raise DeviceKeyAlreadyExistsException('Device key already exists')
+            raise MobileDeviceAlreadyExists('Device key already exists')
 
 
-class DeviceKey(models.Model):
+class MobileDevice(SmartModel):
     """Model used to authenticate mobile devices. Unhashed login_token is stored
     in the device keychain and serve as password to log in together with UUID via DeviceBackend."""
 
-    created_at = models.DateTimeField(auto_now_add=True, null=False, blank=False, verbose_name=_('created at'))
     # this is not UUIDField because of the strict length limitation
-    uuid = models.CharField(verbose_name=_('UUID'), max_length=32)
-    last_login = models.DateTimeField(null=True, blank=True, verbose_name=_('last login'))
-    user = models.ForeignKey(django_settings.AUTH_USER_MODEL, on_delete=models.CASCADE, verbose_name=_('user'))
-    login_token = models.CharField(max_length=128, verbose_name=_('login token'))
-    is_active = models.BooleanField(default=True, verbose_name=_('is active'))
-    user_agent = models.CharField(max_length=256, null=True, blank=True, verbose_name=_('user agent'))
+    uuid = models.CharField(
+        verbose_name=_('UUID'),
+        max_length=36,
+        null=False,
+        blank=False
+    )
+    name = models.CharField(
+        verbose_name=_('name'),
+        max_length=250,
+        null=True,
+        blank=True
+    )
+    slug = models.SlugField(
+        verbose_name=_('slug'),
+        null=True,
+        blank=True
+    )
+    last_login = models.DateTimeField(
+        verbose_name=_('last login'),
+        null=True,
+        blank=True
+    )
+    user = models.ForeignKey(
+        to=django_settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        verbose_name=_('user'),
+        related_name='mobile_devices'
+    )
+    login_token = models.CharField(
+        max_length=128,
+        verbose_name=_('login token'),
+        null=False,
+        blank=False
+    )
+    is_active = models.BooleanField(
+        verbose_name=_('is active'),
+        default=True
+    )
+    user_agent = models.CharField(
+        verbose_name=_('user agent'),
+        max_length=256,
+        null=True,
+        blank=True,
+    )
+    is_primary = models.BooleanField(
+        verbose_name=_('is primary'),
+        default=False
+    )
+
+    @transaction.atomic()
+    def clean_is_primary(self):
+        if self.is_primary and 'is_primary' in self.changed_fields:
+            # only one device can be primary
+            self.__class__.objects.filter(user=self.user).exclude(pk=self.pk).select_for_update().change_and_save(
+                is_primary=False
+            )
 
     class Meta:
         unique_together = ('uuid', 'user')
-        verbose_name = _('device key')
-        verbose_name_plural = _('device keys')
+        verbose_name = _('mobile device')
+        verbose_name_plural = _('mobile devices')
 
-    objects = DeviceKeyQuerySet.as_manager()
-
-    def __str__(self):
-        return '{}, {}'.format(self.uuid, self.user)
+    objects = MobileDeviceQuerySet.as_manager()
 
     def check_password(self, token):
-        return check_password(token, self.login_token)
+        return check_password(str(token), self.login_token)
+
+
+class OneTimePasswordManager(BaseHashKeyManager):
+
+    def _hash_key(self, key, slug, **kwargs):
+        return hash_key(key, salt=slug)
+
+    def create(self, slug, key_generator, **kwargs):
+        return super().create(key_generator, slug=slug, **kwargs)
+
+
+class OneTimePassword(SmartModel):
+    """
+    Specific verification tokens that can be send via e-mail, SMS or another transmission medium
+    to check user authorization (example password reset)
+    """
+    key = models.CharField(
+        verbose_name=_('key'),
+        max_length=128,
+        primary_key=True,
+        null=False,
+        blank=False
+    )
+    expires_at = models.DateTimeField(
+        verbose_name=_('expires at'),
+        null=True,
+        blank=True,
+    )
+    slug = models.SlugField(
+        verbose_name=_('slug'),
+        null=False,
+        blank=False
+    )
+    is_active = models.BooleanField(
+        verbose_name=_('is active'),
+        default=True
+    )
+    data = models.JSONField(
+        verbose_name=_('data'),
+        null=True,
+        blank=True,
+        encoder=DjangoJSONEncoder
+    )
+    related_objects = GenericManyToManyField()
+
+    secret_key = None
+
+    objects = OneTimePasswordManager()
+
+    class Meta:
+        ordering = ('-created_at',)
+        verbose_name = _('one time password')
+        verbose_name_plural = _('one time passwords')
+
+    @property
+    def is_expired(self):
+        return self.expires_at and self.expires_at < timezone.now()
+
+
+class AuthorizationRequest(SmartModel):
+
+    authorization_token = models.ForeignKey(
+        verbose_name=_('authorization token'),
+        to=AuthorizationToken,
+        related_name='authorization_requests',
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
+    user = models.ForeignKey(
+        verbose_name=_('user'),
+        to=django_settings.AUTH_USER_MODEL,
+        related_name='authorization_requests',
+        null=False,
+        blank=False,
+        on_delete=models.CASCADE
+    )
+    slug = models.SlugField(
+        verbose_name=_('slug'),
+        null=True,
+        blank=True
+    )
+    backend = models.CharField(
+        verbose_name=_('backend'),
+        max_length=250,
+        null=False,
+        blank=False
+    )
+    title = models.CharField(
+        verbose_name=_('title'),
+        max_length=250,
+        null=False,
+        blank=False
+    )
+    description = models.TextField(
+        verbose_name=_('description'),
+        null=True,
+        blank=True
+    )
+    result = NumEnumField(
+        verbose_name=_('result'),
+        enum=AuthorizationRequestResult,
+        null=True,
+        blank=True
+    )
+    data = models.JSONField(
+        verbose_name=_('data'),
+        null=True,
+        blank=True,
+        encoder=DjangoJSONEncoder
+    )
+    expires_at = models.DateTimeField(
+        verbose_name=_('expires at'),
+        null=True,
+        blank=True,
+    )
+    granted_at = models.DateTimeField(
+        verbose_name=_('granted at'),
+        null=True,
+        blank=True
+    )
+    related_objects = GenericManyToManyField()
+
+    class Meta:
+        ordering = ('-created_at',)
+        verbose_name = _('authorization request')
+        verbose_name_plural = _('authorization requests')
+
+    @property
+    def is_expired(self):
+        return self.expires_at < timezone.now()
+
+    @property
+    def state(self):
+        if not self.result and self.is_expired:
+            return AuthorizationRequestState.EXPIRED
+        elif not self.result:
+            return AuthorizationRequestState.WAITING
+        else:
+            return AuthorizationRequestState[self.result.name]

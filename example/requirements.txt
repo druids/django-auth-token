@@ -1,5 +1,5 @@
 Django==3.1
-django-germanium==2.2.4
+django-germanium==2.2.5
 coverage==5.3.1
 https://github.com/druids/django-pyston/tarball/AddedDjango3Support#egg=django-pyston
 https://github.com/matllubos/django-is-core/tarball/pynamodb#egg=django-is-core

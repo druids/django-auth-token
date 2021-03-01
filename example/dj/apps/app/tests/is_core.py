@@ -8,14 +8,13 @@ from django.utils.translation import ugettext as _
 from nose.tools import assert_equal
 
 from auth_token.config import settings
-from auth_token.models import Token
+from auth_token.models import AuthorizationToken
 from freezegun import freeze_time
 from germanium.decorators import data_consumer
 from germanium.test_cases.client import ClientTestCase
 from germanium.test_cases.rest import RESTTestCase
 from germanium.tools import assert_false, assert_in, assert_not_in, assert_true
-from germanium.tools.http import (assert_http_accepted, assert_http_ok,
-                                  assert_http_redirect)
+from germanium.tools.http import assert_http_accepted, assert_http_ok,  assert_http_redirect
 
 from .base import BaseTestCaseMixin
 
@@ -40,8 +39,8 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
             self.get(self.INDEX_URL, headers={'HTTP_AUTHORIZATION': 'Bearer {}'.format(resp.json()['token'])})
         )
         assert_not_in('Authorization', self.c.cookies)
-        assert_true(Token.objects.last().allowed_header)
-        assert_false(Token.objects.last().allowed_cookie)
+        assert_true(AuthorizationToken.objects.last().allowed_header)
+        assert_false(AuthorizationToken.objects.last().allowed_cookie)
 
     @override_settings(AUTH_TOKEN_HEADER=False)
     @data_consumer('create_user')
@@ -74,7 +73,7 @@ class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
         assert_http_ok(
             self.get(self.INDEX_URL, headers={'HTTP_AUTHORIZATION': 'Bearer {}'.format(resp.json()['token'])})
         )
-        Token.objects.all().update(allowed_header=False)
+        AuthorizationToken.objects.all().update(allowed_header=False)
         assert_http_redirect(
             self.get(self.INDEX_URL, headers={'HTTP_AUTHORIZATION': 'Bearer {}'.format(resp.json()['token'])})
         )
@@ -170,10 +169,12 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     UI_CODE_CHECK_LOGIN_URL = '/login-code-verification/'
     CODE = '12345'
 
-    def send_two_factor_token(token, code):
+    @staticmethod
+    def send_two_factor_token(authorization_request, code):
         pass
 
-    def generate_code(self):
+    @staticmethod
+    def generate_code():
         return UILoginISCoreTestCase.CODE
 
     @data_consumer('create_user')
@@ -183,8 +184,8 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         assert_http_redirect(resp)
         assert_http_ok(self.get(self.INDEX_URL))
         assert_in('Authorization', self.c.cookies)
-        assert_false(Token.objects.last().allowed_header)
-        assert_true(Token.objects.last().allowed_cookie)
+        assert_false(AuthorizationToken.objects.last().allowed_header)
+        assert_true(AuthorizationToken.objects.last().allowed_cookie)
 
     @override_settings(AUTH_TOKEN_COOKIE=False)
     @data_consumer('create_user')
@@ -207,7 +208,7 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         assert_http_redirect(resp)
         assert_http_ok(self.get(self.INDEX_URL))
         assert_in('Authorization', self.c.cookies)
-        Token.objects.all().update(allowed_cookie=False)
+        AuthorizationToken.objects.all().update(allowed_cookie=False)
         assert_http_redirect(self.get(self.INDEX_URL))
 
     @data_consumer('create_user')
@@ -221,6 +222,8 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
     @override_settings(
         AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
+    @override_settings(
+        AUTH_TOKEN_OTP_DEFAULT_KEY_GENERATOR='app.tests.is_core.UILoginISCoreTestCase.generate_code')
     @data_consumer('create_user')
     def test_user_should_be_authorized_with_two_factor_authentication(self, user):
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
@@ -231,13 +234,10 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
         assert_false(login_resp.wsgi_request.user.is_authenticated)
 
         token = login_resp.wsgi_request.token
-        assert_true(token.two_factor_code is not None)
         assert_false(token.is_authenticated)
         # the code value needs to be overwritted, so that its value could be used for next request
-        token.two_factor_code = make_password('12345', salt=Token.TWO_FACTOR_CODE_SALT)
-        token.save()
 
-        code_check_resp = self.post(self.UI_CODE_CHECK_LOGIN_URL, {'code': '12345'})
+        code_check_resp = self.post(self.UI_CODE_CHECK_LOGIN_URL, {'code': self.CODE})
 
         assert_http_redirect(code_check_resp)
         assert_equal(code_check_resp['location'], '/accounts/profile/')
@@ -249,14 +249,16 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     @override_settings(
         AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
     @override_settings(
-        AUTH_TOKEN_TWO_FACTOR_CODE_GENERATING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.generate_code')
+        AUTH_TOKEN_OTP_DEFAULT_KEY_GENERATOR='app.tests.is_core.UILoginISCoreTestCase.generate_code')
     @patch('app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
     def test_send_two_factor_token_should_be_called_for_two_factor_login(self, send_two_factor_token):
         self.create_user()
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
 
         assert_http_redirect(login_resp)
-        send_two_factor_token.assert_called_once_with(login_resp.wsgi_request.token, self.CODE)
+        send_two_factor_token.assert_called_once_with(
+            login_resp.wsgi_request.token.authorization_requests.get(), self.CODE
+        )
 
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
     @override_settings(
@@ -267,7 +269,7 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
 
         assert_http_redirect(login_resp)
         # the code value needs to be overwritten, so that its value could be used for next request
-        login_resp.wsgi_request.token.two_factor_code = make_password('12345', salt=Token.TWO_FACTOR_CODE_SALT)
+        login_resp.wsgi_request.token.two_factor_code = make_password('12345')
         login_resp.wsgi_request.token.save()
 
         code_check_resp = self.post(self.UI_CODE_CHECK_LOGIN_URL, {'code': 'other_code'})

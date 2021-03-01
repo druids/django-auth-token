@@ -13,9 +13,10 @@ class TokenLoginView(LoginView):
     allowed_cookie = True
     allowed_header = False
 
-    def _login(self, user, expiration, form):
+    def _login(self, user, preserve_cookie, form):
         login(
-            self.request, user, expiration, allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
+            self.request, user, preserve_cookie=preserve_cookie,
+            allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
         )
 
     def form_valid(self, form):
