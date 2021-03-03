@@ -29,21 +29,22 @@ class LoginView(_LoginView):
 class TwoFactorLoginView(LoginView):
 
     def _create_authorization_request(self, user):
-        otp_sender = import_string(settings.TWO_FACTOR_SENDING_FUNCTION)
-        authorization_request = create_authorization_request(
-            slug=settings.TWO_FACTOR_AUTHORIZATION_SLUG,
-            user=user,
-            title=settings.TWO_FACTOR_AUTHORIZATION_TITLE,
-            description=settings.TWO_FACTOR_AUTHORIZATION_DESCRIPTION,
-            authorization_token=self.request.token,
-            backend_path=settings.TWO_FACTOR_AUTHORIZATION_BACKEND
-        )
-        otp_sender(authorization_request, authorization_request.secret_key)
+        if settings.TWO_FACTOR_ENABLED:
+            otp_sender = import_string(settings.TWO_FACTOR_SENDING_FUNCTION)
+            authorization_request = create_authorization_request(
+                slug=settings.TWO_FACTOR_AUTHORIZATION_SLUG,
+                user=user,
+                title=settings.TWO_FACTOR_AUTHORIZATION_TITLE,
+                description=settings.TWO_FACTOR_AUTHORIZATION_DESCRIPTION,
+                authorization_token=self.request.token,
+                backend_path=settings.TWO_FACTOR_AUTHORIZATION_BACKEND
+            )
+            otp_sender(authorization_request, authorization_request.secret_key)
 
     def _login(self, user, preserve_cookie, form):
         login(
             self.request, user, preserve_cookie=preserve_cookie, allowed_cookie=self.allowed_cookie,
-            allowed_header=self.allowed_header, two_factor_login=True
+            allowed_header=self.allowed_header, two_factor_login=settings.TWO_FACTOR_ENABLED
         )
 
     def get_success_url(self):

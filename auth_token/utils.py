@@ -172,11 +172,23 @@ def login(request, user, auth_slug=None, related_objs=None, backend=None, allowe
 
     if related_objs:
         token.related_objects.add(*related_objs)
-    if hasattr(request, 'user') and token.is_authenticated:
-        request.user = user
+    if token.is_authenticated:
+        if hasattr(request, 'user'):
+            request.user = user
+        user_logged_in.send(sender=user.__class__, request=request, user=user)
     request.token = token
     rotate_token(request)
-    user_logged_in.send(sender=user.__class__, request=request, user=user)
+
+
+def authorize_login(authorization_token, request=None):
+    """
+    Set authorization token to be fully authenticated.
+    Args:
+        request: django HTTP request.
+        authorization_token: authorization token to be authenticated
+    """
+    authorization_token.change_and_save(is_authenticated=True, update_only_changed_fields=True)
+    user_logged_in.send(sender=authorization_token.user.__class__, request=request, user=authorization_token.user)
 
 
 def logout(request):
@@ -315,11 +327,7 @@ def get_user_from_token(token):
     """
     if token:
         backend_path = token.backend
-        if (backend_path in django_settings.AUTHENTICATION_BACKENDS and (
-                not settings.TWO_FACTOR_ENABLED or (
-                        hasattr(token, 'is_authenticated') and token.is_authenticated
-                )
-        )):
+        if backend_path in django_settings.AUTHENTICATION_BACKENDS and token.is_authenticated:
             active_takeover_id = token.active_takeover.user.pk if token.active_takeover else None
             user_id = token.user.pk
             backend = load_backend(backend_path)
