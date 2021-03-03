@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('auth_token', '0011_auto_20210119_1308'),
+        ('auth_token', '0012_auto_20210119_1308'),
     ]
 
     operations = [
@@ -32,6 +32,11 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='mobiledevice',
+            name='changed_at',
+            field=models.DateTimeField(auto_now=True, db_index=True, verbose_name='changed at'),
+        ),
+        migrations.AlterField(
+            model_name='mobiledevice',
             name='created_at',
             field=models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='created at'),
         ),
@@ -44,5 +49,14 @@ class Migration(migrations.Migration):
         migrations.DeleteModel(
             name='UserTokenTakeover',
         ),
-
+        migrations.AlterField(
+            model_name='authorizationtoken',
+            name='created_at',
+            field=models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='created at'),
+        ),
+        migrations.AlterField(
+            model_name='authorizationtoken',
+            name='changed_at',
+            field=models.DateTimeField(auto_now=True, db_index=True, verbose_name='changed at'),
+        ),
     ]
