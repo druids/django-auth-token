@@ -7,7 +7,7 @@ from is_core.forms.forms import SmartForm
 from auth_token.config import settings
 from auth_token.contrib.common.forms import AuthenticationCleanMixin, TokenAuthenticationMixin
 from auth_token.models import AuthorizationToken, hash_key
-from auth_token.utils import get_valid_otp, check_authorization_request
+from auth_token.utils import authorize_login, get_valid_otp, check_authorization_request
 
 
 class TokenAuthenticationSmartForm(TokenAuthenticationMixin, AuthenticationCleanMixin, SmartForm):
@@ -39,7 +39,7 @@ class LoginCodeVerificationForm(SmartForm):
         authorization_requests = self.get_authorization_request()
 
         if authorization_requests and check_authorization_request(authorization_requests, otp_secret_key=code):
-            self.request.token.change_and_save(is_authenticated=True, update_only_changed_fields=True)
+            authorize_login(self.request.token, self.request)
         else:
             raise forms.ValidationError(_('The inserted value does not correspond to the sent code.'))
         return code
