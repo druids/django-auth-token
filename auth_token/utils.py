@@ -187,8 +187,12 @@ def authorize_login(authorization_token, request=None):
         request: django HTTP request.
         authorization_token: authorization token to be authenticated
     """
-    authorization_token.change_and_save(is_authenticated=True, update_only_changed_fields=True)
-    user_logged_in.send(sender=authorization_token.user.__class__, request=request, user=authorization_token.user)
+    if not authorization_token.is_authenticated:
+        authorization_token.change_and_save(is_authenticated=True, update_only_changed_fields=True)
+        user_logged_in.send(sender=authorization_token.user.__class__, request=request, user=authorization_token.user)
+        if request and authorization_token == request.token:
+            request.token = authorization_token
+            request.user = get_user_from_token(authorization_token)
 
 
 def logout(request):
@@ -600,11 +604,12 @@ def check_authorization_request(authorization_request, **kwargs):
     return backend.authenticate(authorization_request, **kwargs)
 
 
-def grant_authorization_request(authorization_request):
+def grant_authorization_request(authorization_request, **kwargs):
     """
     Grant access for the authorization request.
     Args:
         authorization_request: authorization request to grant.
+        **kwargs: extra data which will be send to the signal.
     """
     assert authorization_request.result is None
 
@@ -615,14 +620,15 @@ def grant_authorization_request(authorization_request):
         result=AuthorizationRequestResult.GRANTED,
         granted_at=now()
     )
-    authorization_granted.send(sender=authorization_request.slug, authorization_request=authorization_request)
+    authorization_granted.send(sender=authorization_request.slug, authorization_request=authorization_request, **kwargs)
 
 
-def deny_authorization_request(authorization_request):
+def deny_authorization_request(authorization_request, **kwargs):
     """
     Deny access for the authorization request.
     Args:
        authorization_request: authorization request to deny.
+       **kwargs: extra data which will be send to the signal.
     """
     assert authorization_request.result is None
 
@@ -633,11 +639,12 @@ def deny_authorization_request(authorization_request):
     authorization_denied.send(sender=authorization_request.slug, authorization_request=authorization_request)
 
 
-def cancel_authorization_request(authorization_request):
+def cancel_authorization_request(authorization_request, **kwargs):
     """
     Cancel authorization request.
     Args:
         authorization_request: authorization request to cancel.
+        **kwargs: extra data which will be send to the signal.
     """
     assert authorization_request.result is None
 

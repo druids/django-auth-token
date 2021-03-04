@@ -591,7 +591,7 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_equal(authorization_request.state, AuthorizationRequestState.WAITING)
         with mock.patch('dj.apps.app.tests.utils.authorization_receiver') as mocked_receiver:
             authorization_granted.connect(mocked_receiver, sender='test')
-            grant_authorization_request(authorization_request)
+            grant_authorization_request(authorization_request, extra_data='test')
             mocked_receiver.assert_called()
             assert_equal(authorization_request.refresh_from_db().state, AuthorizationRequestState.GRANTED)
 
