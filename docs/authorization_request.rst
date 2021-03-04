@@ -65,27 +65,30 @@ Grant authorization request
 
 Function ``auth_token.utils.grant_authorization_request`` is used to grant authorization request. Only authorization in ``WAITING`` state can be granted.
 
-.. function:: grant_authorization_request(authorization_request)
+.. function:: grant_authorization_request(authorization_request, **kwargs)
 
   * ``authorization_request`` - authorization request to grant.
+  * ``**kwargs`` - custom data which will be send to the signal.
 
 Deny authorization request
 --------------------------
 
 Function ``auth_token.utils.deny_authorization_request`` is used to deny authorization request. Only authorization in ``WAITING`` state can be denied.
 
-.. function:: deny_authorization_request(authorization_request)
+.. function:: deny_authorization_request(authorization_request, **kwargs)
 
   * ``authorization_request`` - authorization request to deny.
+  * ``**kwargs`` - custom data which will be send to the signal.
 
 Cancel authorization request
 ----------------------------
 
 Function ``auth_token.utils.cancel_authorization_request`` is used to cancel authorization request. Only authorization in ``WAITING`` state can be cancelled.
 
-.. function:: cancel_authorization_request(authorization_request)
+.. function:: cancel_authorization_request(authorization_request, **kwargs)
 
   * ``authorization_request`` - authorization request to deny.
+  * ``**kwargs`` - custom data which will be send to the signal.
 
 Authorization request backend
 -----------------------------
