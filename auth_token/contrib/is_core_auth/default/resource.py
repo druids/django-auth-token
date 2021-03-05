@@ -32,8 +32,7 @@ class AuthResource(RESTResource):
             preserve_cookie=permanent,
             allowed_cookie=self.allowed_cookie,
             allowed_header=self.allowed_header,
-            two_factor_login=two_factor_login,
-            mobile_device=getattr(user, 'authenticated_mobile_device', None)
+            two_factor_login=two_factor_login
         )
 
     def _unsucessful_login(self, request):

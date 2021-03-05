@@ -26,6 +26,7 @@ class DeviceBackend(ModelBackend):
                         last_login=timezone.now(),
                         update_only_changed_fields=True
                     )
+                    user.authenticated_mobile_device = mobile_device
                     return user
                 else:
                     return None

@@ -167,7 +167,7 @@ def login(request, user, auth_slug=None, related_objs=None, backend=None, allowe
         is_authenticated=not two_factor_login,
         expires_at=compute_authorization_token_expires_at(expiration),
         preserve_cookie=preserve_cookie,
-        mobile_device=mobile_device
+        mobile_device=mobile_device or getattr(user, 'authenticated_mobile_device', None)
     )
 
     if related_objs:
