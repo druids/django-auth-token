@@ -171,11 +171,11 @@ msgstr "mobilní zařízení"
 
 #: models.py:152 models.py:203 models.py:391
 msgid "authorization token"
-msgstr "přihlašovací token"
+msgstr "autorizační token"
 
 #: models.py:153
 msgid "authorization tokens"
-msgstr "přihlašovací tokeny"
+msgstr "autorizační tokeny"
 
 #: models.py:219
 msgid "authorization takeover"

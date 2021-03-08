@@ -66,7 +66,8 @@ class AuthorizationToken(SmartModel):
     key = models.CharField(
         verbose_name=_('key'),
         max_length=128,
-        primary_key=True,
+        unique=True,
+        db_index=True,
         null=False,
         blank=False
     )
@@ -338,10 +339,12 @@ class OneTimePassword(SmartModel):
     Specific verification tokens that can be send via e-mail, SMS or another transmission medium
     to check user authorization (example password reset)
     """
+
     key = models.CharField(
         verbose_name=_('key'),
         max_length=128,
-        primary_key=True,
+        unique=True,
+        db_index=True,
         null=False,
         blank=False
     )
