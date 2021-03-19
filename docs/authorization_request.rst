@@ -33,7 +33,7 @@ To reset authorization request for example with purpose to create new OTP you ca
 .. function:: reset_authorization_request(authorization_request, expiration=None)
 
   * ``authorization_request`` - authorization request only with type OTP.
-  * ``expiration`` - expiration time in seconds. Empty value means that original expiration time will be used.
+  * ``expiration`` - expiration time in seconds.
 
 
 Check authorization request
