@@ -58,9 +58,8 @@ class LoginAuthToken(APIView):
                                            context={'request': request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-
         login(
-            request._request, user, not serializer.validated_data.get('permanent', False),
+            request._request, user, preserve_cookie=not serializer.validated_data.get('permanent', False),
             allowed_cookie=self.allowed_cookie, allowed_header=self.allowed_header
         )
         return Response({'token': request._request.token.secret_key})

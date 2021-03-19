@@ -568,16 +568,14 @@ def reset_authorization_request(authorization_request, expiration=None):
     Reset authorization request and increase its expiration.
     Args:
         authorization_request: authorization request where new OTP will be created.
-        expiration: expiration time in seconds. Empty value means that original expiration time will be used.
+        expiration: expiration time in seconds.
 
     Returns:
         AuthorizationRequest instance with new authorization data
     """
     assert authorization_request.result is None
     backend = get_authorization_backend(authorization_request.backend, raise_exception=True)
-
-    if expiration is None:
-        expiration = (authorization_request.expires_at - authorization_request.created_at).total_seconds()
+    expiration = expiration or settings.DEFAULT_AUTHORIZATION_REQUEST_AGE
 
     authorization_request.change_and_save(expires_at=compute_expires_at(expiration))
     backend.initialize(authorization_request)
