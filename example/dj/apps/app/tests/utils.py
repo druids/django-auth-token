@@ -19,6 +19,7 @@ from germanium.tools import (
 )
 
 from auth_token.enums import AuthorizationRequestState
+from auth_token.exceptions import KeyGeneratorError
 from auth_token.models import AnonymousUser, AnonymousAuthorizationToken, MobileDevice
 from auth_token.utils import (
     compute_expires_at, hash_key, header_name_to_django, generate_key,
@@ -698,3 +699,23 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
             cancel_authorization_request(authorization_request)
             mocked_receiver.assert_not_called()
             assert_equal(authorization_request.refresh_from_db().state, AuthorizationRequestState.CANCELLED)
+
+    @freeze_time(now())
+    def test_duplicite_key_generator_should_raise_exception(self):
+        create_otp('test', key_generator=lambda: '1234')
+        with assert_raises(KeyGeneratorError):
+            create_otp('test', key_generator=lambda: '1234')
+
+    @freeze_time(now())
+    def test_key_genrator_should_be_called_more_times(self):
+        def key_genertor():
+            key_genertor.iteration += 1
+            if key_genertor.iteration < 100:
+                return '1234'
+            else:
+                return '1235'
+        key_genertor.iteration = 0
+
+        create_otp('test', key_generator=lambda: '1234')
+        assert_equal(create_otp('test', key_generator=key_genertor).secret_key, '1235')
+        assert_equal(key_genertor.iteration, 100)

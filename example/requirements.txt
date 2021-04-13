@@ -2,7 +2,7 @@ Django==3.1
 django-germanium==2.2.5
 coverage==5.3.1
 django-pyston==2.14.2
-django-is-core==2.22.3
+django-is-core==2.22.9
 djangorestframework==3.12.2
 freezegun==1.0.0
 -e ../

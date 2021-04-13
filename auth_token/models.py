@@ -13,6 +13,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from enumfields import NumEnumField
 
+from chamber.exceptions import PersistenceException
 from chamber.models import SmartModel, SmartQuerySet, SmartManager
 
 from generic_m2m_field.models import GenericManyToManyField
@@ -21,6 +22,7 @@ from auth_token.utils import compute_expires_at, generate_key, hash_key
 from auth_token.config import settings
 
 from .enums import AuthorizationRequestState, AuthorizationRequestResult
+from .exceptions import KeyGeneratorError
 
 
 KEY_SALT = 'django-auth-token'
@@ -40,7 +42,7 @@ class BaseHashKeyManager(SmartManager):
         return hash_key(key)
 
     def create(self, key_generator, **kwargs):
-        for attempt in range(settings.MAX_RANDOM_KEY_ITERATIONS + 1):
+        for _ in range(settings.MAX_RANDOM_KEY_ITERATIONS):
             try:
                 key = key_generator()
                 hashed_key = self._hash_key(key, **kwargs)
@@ -48,8 +50,11 @@ class BaseHashKeyManager(SmartManager):
                 obj.secret_key = key
                 return obj
             except IntegrityError:
-                if attempt > settings.MAX_RANDOM_KEY_ITERATIONS:
-                    raise IntegrityError('Could not produce unique key')
+                pass
+            except PersistenceException as ex:
+                if not ex.error_dict and 'key' not in ex.error_dict:
+                    raise ex
+        raise KeyGeneratorError('Could not produce unique key')
 
 
 class AuthorizationTokenManager(BaseHashKeyManager):

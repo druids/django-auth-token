@@ -40,9 +40,7 @@ pip:
 	$(PYTHON_BIN)/pip install -r requirements.txt
 
 initvirtualenv:
-	virtualenv -p $(PYTHON) --no-site-packages $(VIRTUAL_ENV)
-	$(PYTHON_BIN)/pip install --upgrade pip==1.5
-	$(PYTHON_BIN)/pip install setuptools --no-use-wheel --upgrade
+	virtualenv -p $(PYTHON) $(VIRTUAL_ENV)
 
 bootstrap: initvirtualenv pip
 
