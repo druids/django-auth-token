@@ -11,7 +11,7 @@ Command removes expired tokens of all users. Setting ``AUTH_TOKEN_COUNT_USER_PRE
 clean_one_time_passwords
 ------------------------
 
-Command removes expired on inactive one time passwords from database.
+Command removes expired or inactive one time passwords from database. Setting ``AUTH_TOKEN_OTP_EXPIRATION_RETENTION_PERIOD`` defines number of seconds for which active, but expired OTPs will be preserved before deletion.
 
 clean_authorization_requests
 ----------------------------

@@ -463,24 +463,30 @@ def get_otp_qs(slug=None, key=None, related_objects=None, **kwargs):
     return otp_qs
 
 
-def get_valid_otp(slug, key=None, related_objects=None):
+def get_valid_otp(slug, key=None, related_objects=None, deactivate=False):
     """
     Find and return valid OTP with a given slug and key.
     Args:
         slug: string for OTP identification.
         key: key used for validation of OTP.
         related_objects: list of related objects which must be related with OTP.
+        deactivate: deactivate the OTP after successful retrieval.
 
     Returns:
         valid OTP instance or None value.
     """
-    return get_otp_qs(
+    otp =  get_otp_qs(
         slug=slug,
         key=key,
         related_objects=related_objects,
         is_active=True,
         expires_at__gt=now()
     ).first('-created_at')
+
+    if otp and deactivate:
+        otp.change_and_save(is_active=False)
+
+    return otp
 
 
 def check_otp(slug, key):

@@ -164,6 +164,11 @@ Setup
 
   Path to the default OTP generator. Default value is ``'auth_token.utils.generate_key'``.
 
+.. attribute:: AUTH_TOKEN_OTP_EXPIRATION_RETENTION_PERIOD
+
+  Number of seconds for which active, but expired OTPs will be preserved before deletion. The value should a multiple
+  of ``clean_one_time_passwords`` command run period.
+
 .. attribute:: AUTH_TOKEN_AUTHORIZATION_REQUEST_BACKENDS
 
   List of backends used for authorization request authentication.

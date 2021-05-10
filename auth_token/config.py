@@ -37,6 +37,7 @@ DEFAULTS = {
     'OTP_DEFAULT_GENERATOR_LENGTH': 6,  # Number of characters of key which generates default OTP generator.
     'OTP_DEFAULT_AGE': 60 * 60,  # Default OTP expiration time (default: 1 hour),
     'OTP_DEFAULT_KEY_GENERATOR': 'auth_token.utils.generate_otp_key',  # Default key generator for OTP
+    'OTP_EXPIRATION_RETENTION_PERIOD': 0,  # Expired tokens are deleted immediately
 
     'DEFAULT_AUTHORIZATION_REQUEST_AGE': 60 * 60,  # Default authorization request expiration time (default: 1 hour),
     'AUTHORIZATION_REQUEST_PRESERVE_AGE': 60 * 60 * 24 * 7,  # Keep expired authorization requests in database

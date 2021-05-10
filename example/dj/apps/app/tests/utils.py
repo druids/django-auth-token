@@ -434,6 +434,11 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_equal(get_valid_otp('test', related_objects=[user]), otp1)
         assert_is_none(get_valid_otp('test', otp2.secret_key, related_objects=[user]))
 
+    def test_get_valid_otp_should_deactive_returned_otp(self):
+        otp = create_otp('test')
+        get_valid_otp('test', otp.secret_key, deactivate=True)
+        assert_false(otp.refresh_from_db().is_active)
+
     def test_check_otp_should_return_true_if_input_data_are_valid(self):
         otp1 = create_otp('test')
         otp2 = create_otp('test2')
