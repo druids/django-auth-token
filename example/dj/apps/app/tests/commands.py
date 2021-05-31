@@ -27,15 +27,21 @@ class CleanTokensCommandTestCase(BaseTestCaseMixin, GermaniumTestCase):
     @data_consumer('create_user')
     def test_clean_authorization_tokens_should_remove_only_old_tokens(self, user):
         expired_tokens = [
-            AuthorizationToken.objects.create(user=user, ip='127.0.0.1', backend='test') for _ in range(10)
+            AuthorizationToken.objects.create(
+                user=user, ip='127.0.0.1', backend='test', expires_at=timezone.now() - timedelta(seconds=1)
+            ) for _ in range(10)
         ]
         not_expired_tokens = [
-            AuthorizationToken.objects.create(user=user, ip='127.0.0.1', backend='test', expires_at=timezone.now())
+            AuthorizationToken.objects.create(
+                user=user, ip='127.0.0.1', backend='test', expires_at=timezone.now() + timedelta(seconds=1)
+            )
             for _ in range(settings.COUNT_USER_PRESERVED_TOKENS - 5)
         ]
         test_call_command('clean_authorization_tokens')
-        assert_equal(AuthorizationToken.objects.filter(pk__in=[token.pk for token in not_expired_tokens]).count(),
-                     settings.COUNT_USER_PRESERVED_TOKENS - 5)
+        assert_equal(
+            AuthorizationToken.objects.filter(pk__in=[token.pk for token in not_expired_tokens]).count(),
+            settings.COUNT_USER_PRESERVED_TOKENS - 5
+        )
         assert_equal(AuthorizationToken.objects.filter(pk__in=[token.pk for token in expired_tokens]).count(), 5)
 
     @override_settings(AUTH_TOKEN_OTP_EXPIRATION_RETENTION_PERIOD=60)
