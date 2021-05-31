@@ -22,7 +22,7 @@ class Command(BaseCommand):
                 user=user
             ).order_by('-created_at')[:settings.COUNT_USER_PRESERVED_TOKENS].values('pk')
             removing_tokens_qs = AuthorizationToken.objects.filter(
-                expires_at__gt=timezone.now(),
+                expires_at__lt=timezone.now(),
                 user=user
             ).exclude(pk__in=user_last_preserved_token_pks)
             self.stdout.write('Removing {} tokens of user {}'.format(removing_tokens_qs.count(), user))
