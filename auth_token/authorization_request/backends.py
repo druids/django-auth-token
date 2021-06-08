@@ -1,5 +1,5 @@
 from auth_token.config import settings
-from auth_token.utils import create_otp, deactivate_otp, get_valid_otp
+from auth_token.utils import create_otp, deactivate_otp, get_valid_otp, otp_key_generator_factory
 from auth_token.models import MobileDevice
 
 
@@ -50,6 +50,12 @@ class BaseAuthorizationRequestBackend:
         pass
 
 
+default_otp_authorization_request_generator = otp_key_generator_factory(
+    characters=settings.AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR_CHARACTERS,
+    length=settings.AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR_LENGTH
+)
+
+
 class OTPAuthorizationRequestBackend(BaseAuthorizationRequestBackend):
     """
     Backend for authorization request authentication via OTP.
@@ -60,7 +66,8 @@ class OTPAuthorizationRequestBackend(BaseAuthorizationRequestBackend):
             authorization_request.slug,
             expiration=(authorization_request.expires_at - authorization_request.created_at).total_seconds(),
             related_objects=[authorization_request],
-            deactivate_old=True
+            deactivate_old=True,
+            key_generator=settings.AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR
         )
 
     def initialize(self, authorization_request):

@@ -223,7 +223,8 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     @override_settings(
         AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
     @override_settings(
-        AUTH_TOKEN_OTP_DEFAULT_KEY_GENERATOR='app.tests.is_core.UILoginISCoreTestCase.generate_code')
+        AUTH_TOKEN_AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR='app.tests.is_core.UILoginISCoreTestCase.'
+                                                                   'generate_code')
     @data_consumer('create_user')
     def test_user_should_be_authorized_with_two_factor_authentication(self, user):
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})
@@ -249,7 +250,8 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
     @override_settings(
         AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
     @override_settings(
-        AUTH_TOKEN_OTP_DEFAULT_KEY_GENERATOR='app.tests.is_core.UILoginISCoreTestCase.generate_code')
+        AUTH_TOKEN_AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR='app.tests.is_core.UILoginISCoreTestCase.'
+                                                                   'generate_code')
     @patch('app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
     def test_send_two_factor_token_should_be_called_for_two_factor_login(self, send_two_factor_token):
         self.create_user()
@@ -262,7 +264,8 @@ class UILoginISCoreTestCase(BaseTestCaseMixin, ClientTestCase):
 
     @override_settings(AUTH_TOKEN_TWO_FACTOR_ENABLED=True)
     @override_settings(
-        AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token')
+        AUTH_TOKEN_TWO_FACTOR_SENDING_FUNCTION='app.tests.is_core.UILoginISCoreTestCase.send_two_factor_token'
+    )
     @data_consumer('create_user')
     def test_user_should_not_be_logged_in_two_factor_for_invalid_code(self, user):
         login_resp = self.post(self.UI_TWO_FACTOR_LOGIN_URL, {'username': 'test', 'password': 'test'})

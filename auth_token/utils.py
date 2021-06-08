@@ -105,13 +105,26 @@ def generate_key(characters=string.ascii_letters + string.digits, length=20):
     return ''.join(random.choices(characters, k=length))
 
 
-def generate_otp_key():
+def otp_key_generator_factory(characters, length):
     """
-    Default OTP key generator.
+    Factory for random OTP key generator
+    Args:
+        characters: characters which will be used to generate OTP key
+        length: length of generated OTP key
+
+    Returns:
+
     """
-    return generate_key(
-        characters=settings.OTP_DEFAULT_GENERATOR_CHARACTERS, length=settings.OTP_DEFAULT_GENERATOR_LENGTH
-    )
+    def _generate_otp_key():
+        return generate_key(
+            characters=characters, length=length
+        )
+    return _generate_otp_key
+
+
+generate_otp_key = otp_key_generator_factory(
+    characters=settings.OTP_DEFAULT_GENERATOR_CHARACTERS, length=settings.OTP_DEFAULT_GENERATOR_LENGTH
+)
 
 
 def login(request, user, auth_slug=None, related_objs=None, backend=None, allowed_cookie=True,
@@ -416,7 +429,8 @@ def create_otp(slug, related_objects=None, data=None, key_generator=None, expira
     if deactivate_old:
         deactivate_otp(slug, related_objects=related_objects)
 
-    key_generator = import_string(settings.OTP_DEFAULT_KEY_GENERATOR) if key_generator is None else key_generator
+    key_generator = settings.OTP_DEFAULT_KEY_GENERATOR if key_generator is None else key_generator
+    key_generator = import_string(key_generator) if isinstance(key_generator, str) else key_generator
 
     otp = OneTimePassword.objects.create(
         slug=slug,
