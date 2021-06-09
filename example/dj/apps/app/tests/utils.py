@@ -1,3 +1,4 @@
+import re
 import string
 
 from datetime import timedelta
@@ -27,9 +28,10 @@ from auth_token.utils import (
     get_token, dont_enforce_csrf_checks, get_user_from_token, get_user, takeover, create_otp, deactivate_otp,
     get_valid_otp, check_otp, extend_otp, create_authorization_request, check_authorization_request,
     grant_authorization_request, deny_authorization_request,cancel_authorization_request, reset_authorization_request,
-    get_otp_qs
+    get_otp_qs, generate_otp_key
 )
 from auth_token.signals import authorization_granted, authorization_denied, authorization_cancelled
+from auth_token.authorization_request.backends import default_otp_authorization_request_generator
 
 from .base import BaseTestCaseMixin
 
@@ -724,3 +726,11 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
         create_otp('test', key_generator=lambda: '1234')
         assert_equal(create_otp('test', key_generator=key_genertor).secret_key, '1235')
         assert_equal(key_genertor.iteration, 100)
+
+    def test_generate_otp_key_should_generate_20_chars_length_key(self):
+        for _ in range(20):
+            assert_true(re.match(r'^[a-zA-Z0-9]{20}$', generate_otp_key()))
+
+    def test_default_otp_authorization_request_generator_should_generate_6_length_digit_key(self):
+        for _ in range(20):
+            assert_true(re.match(r'^[0-9]{6}$', default_otp_authorization_request_generator()))

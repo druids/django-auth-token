@@ -28,13 +28,21 @@ DEFAULTS = {
     'TWO_FACTOR_CODE_SALT': 'auth-token-two-factor',
     'TWO_FACTOR_SENDING_FUNCTION': '',  # Function, which need to be implemented to send the key for second part of
                                         # authorization process to the user
+    'AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR_LENGTH': 6,  # Number of characters of key which
+                                                                  # generates default OTP generator for
+                                                                  # OTP authorization backend.
+    'AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR_CHARACTERS': string.digits,
+    'AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR':
+        'auth_token.authorization_request.backends.default_otp_authorization_request_generator', # Default key generator
+                                                                                                 # for authorization
+                                                                                                 # OTP backend
     'RENEWAL_EXEMPT_HEADER': 'X-Authorization-Renewal-Exempt',  # Header name which causes that the token expiration
                                                                 # time will not be extended
     'EXPIRATION_HEADER': 'X-Authorization-Expiration',  # Header name which contains information about token expiration
     'MAX_RANDOM_KEY_ITERATIONS': 100,  # Maximum iterations for random key generator
     'HASH_SALT': 'django.auth.token',  # Salt for hash_key function
-    'OTP_DEFAULT_GENERATOR_CHARACTERS': string.digits,
-    'OTP_DEFAULT_GENERATOR_LENGTH': 6,  # Number of characters of key which generates default OTP generator.
+    'OTP_DEFAULT_GENERATOR_CHARACTERS': string.digits + string.ascii_letters,
+    'OTP_DEFAULT_GENERATOR_LENGTH': 20,  # Number of characters of key which generates default OTP generator.
     'OTP_DEFAULT_AGE': 60 * 60,  # Default OTP expiration time (default: 1 hour),
     'OTP_DEFAULT_KEY_GENERATOR': 'auth_token.utils.generate_otp_key',  # Default key generator for OTP
     'OTP_EXPIRATION_RETENTION_PERIOD': 0,  # Expired tokens are deleted immediately

@@ -154,11 +154,11 @@ Setup
 
 .. attribute:: AUTH_TOKEN_OTP_DEFAULT_GENERATOR_CHARACTERS
 
-  Characters which can be used to generate key with default OTP generator. Default value is ``string.digits``.
+  Characters which can be used to generate key with default OTP generator. Default value is ``string.digits + string.ascii_letters``.
 
 .. attribute:: AUTH_TOKEN_OTP_DEFAULT_GENERATOR_LENGTH
 
-  Number of characters of key which generates default OTP generator. Default value is ``6``.
+  Number of characters of key which generates default OTP generator. Default value is ``20``.
 
 .. attribute:: AUTH_TOKEN_OTP_DEFAULT_KEY_GENERATOR
 
@@ -176,3 +176,18 @@ Setup
 .. attribute:: AUTH_TOKEN_MOBILE_DEVICE_SECRET_PASSWORD_LENGTH
 
   Default length for generated mobile device secret token. Default value is ``64``.
+
+.. attribute:: AUTH_TOKEN_AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR
+
+  Path to the default OTP key generator of ``auth_token.authorization_request.backends.OTPAuthorizationRequestBackend`` class. Default value is ``auth_token.authorization_request.backends.default_otp_authorization_request_generator``.
+
+.. attribute:: AUTH_TOKEN_AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR_CHARACTERS
+
+  Characters which can be used to generate key with default key generator of ``auth_token.authorization_request.backends.OTPAuthorizationRequestBackend`` class. Default value is ``string.digits``.
+
+.. attribute:: AUTH_TOKEN_AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR_LENGTH
+
+   Number of characters of key which generates default key generator of ``auth_token.authorization_request.backends.OTPAuthorizationRequestBackend`` class. Default value is ``6``.
+
+
+
