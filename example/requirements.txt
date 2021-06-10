@@ -1,4 +1,4 @@
-Django==3.1.9
+Django==3.1.12
 django-germanium==2.2.5
 coverage==5.3.1
 django-pyston==2.14.2
