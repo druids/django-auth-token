@@ -311,20 +311,21 @@ class MobileDevice(SmartModel):
         default=False
     )
 
-    @transaction.atomic()
-    def clean_is_primary(self):
-        if self.is_primary and 'is_primary' in self.changed_fields:
-            # only one device can be primary
-            self.__class__.objects.filter(user=self.user).exclude(pk=self.pk).select_for_update().change_and_save(
-                is_primary=False
-            )
-
     class Meta:
         unique_together = ('uuid', 'user')
         verbose_name = _('mobile device')
         verbose_name_plural = _('mobile devices')
 
     objects = MobileDeviceQuerySet.as_manager()
+
+    @transaction.atomic()
+    def _pre_save(self, changed, changed_fields, *args, **kwargs):
+        super()._pre_save(self, changed, changed_fields, *args, **kwargs)
+        if self.is_primary and 'is_primary' in self.changed_fields:
+            # only one device can be primary
+            self.__class__.objects.filter(user=self.user).exclude(pk=self.pk).select_for_update().change_and_save(
+                is_primary=False
+            )
 
     def check_password(self, token):
         return check_password(str(token), self.login_token)
