@@ -1,3 +1,5 @@
+from urllib.parse import quote_plus
+
 from django import forms
 from django.conf import settings as django_settings
 from django.contrib.auth import login as auth_login
@@ -49,8 +51,9 @@ class TwoFactorLoginView(LoginView):
 
     def get_success_url(self):
         return '{url}?{redirect_field_name}={value}'.format(
-            url=settings.TWO_FACTOR_REDIRECT_URL, redirect_field_name=self.redirect_field_name,
-            value=self.get_redirect_url()
+            url=settings.TWO_FACTOR_REDIRECT_URL,
+            redirect_field_name=self.redirect_field_name,
+            value=quote_plus(self.get_redirect_url())
         )
 
     def form_valid(self, form):
