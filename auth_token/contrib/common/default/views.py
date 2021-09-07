@@ -13,6 +13,12 @@ class TokenLoginView(LoginView):
     allowed_cookie = True
     allowed_header = False
 
+    def get(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return HttpResponseRedirect(self.get_success_url())
+        else:
+            return super().get(request, *args, **kwargs)
+
     def _login(self, user, preserve_cookie, form):
         login(
             self.request, user, preserve_cookie=preserve_cookie,
