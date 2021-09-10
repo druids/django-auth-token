@@ -19,8 +19,7 @@ from auth_token.contrib.is_core_auth.forms import LoginCodeVerificationForm
 from auth_token.models import AuthorizationToken
 from auth_token.utils import create_authorization_request, grant_authorization_request, login, takeover
 
-from is_core.generic_views import DefaultCoreViewMixin
-from is_core.generic_views.mixins import GetCoreObjViewMixin
+from is_core.generic_views.mixins import DefaultCoreViewMixin, CoreGetObjViewMixin
 
 
 class LoginView(_LoginView):
@@ -77,7 +76,7 @@ class LogoutView(_LogoutView):
     template_name = 'is_core/logged_out.html'
 
 
-class UserTakeover(GetCoreObjViewMixin, DefaultCoreViewMixin, RedirectView):
+class UserTakeover(CoreGetObjViewMixin, DefaultCoreViewMixin, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         return settings.TAKEOVER_REDIRECT_URL
