@@ -6,7 +6,7 @@ from auth_token.config import settings
 from auth_token.utils import header_name_to_django, create_auth_header_value
 
 
-class RESTAuthMixin:
+class RestAuthMixin:
 
     def authorize(self, username, password):
         resp = self.post(

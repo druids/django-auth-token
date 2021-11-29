@@ -1,4 +1,3 @@
-import binascii
 import random
 import re
 import string
@@ -29,7 +28,7 @@ from ipware.ip import get_client_ip
 
 
 try:
-    import security
+    import security  # noqa: F401
     is_installed_security = True
 except ImportError:
     is_installed_security = False
@@ -335,8 +334,8 @@ def dont_enforce_csrf_checks(request):
         boolean if csrf check should be processed or none.
     """
     return (
-        header_name_to_django(settings.HEADER_NAME) in request.META or
-        getattr(request, '_dont_enforce_csrf_checks', False)
+        header_name_to_django(settings.HEADER_NAME) in request.META
+        or getattr(request, '_dont_enforce_csrf_checks', False)
     )
 
 
@@ -496,7 +495,7 @@ def get_valid_otp(slug, key=None, related_objects=None, deactivate=False):
     Returns:
         valid OTP instance or None value.
     """
-    otp =  get_otp_qs(
+    otp = get_otp_qs(
         slug=slug,
         key=key,
         related_objects=related_objects,

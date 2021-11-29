@@ -54,8 +54,10 @@ class TokenAuthenticationMiddleware:
         response[settings.EXPIRATION_HEADER] = str(request.token.time_to_expiration)
 
     def _is_token_renewal_exempt(self, request):
-        return (getattr(request, 'auth_token_renewal_exempt', False) or
-                header_name_to_django(settings.RENEWAL_EXEMPT_HEADER) in request.META)
+        return (
+            getattr(request, 'auth_token_renewal_exempt', False)
+            or header_name_to_django(settings.RENEWAL_EXEMPT_HEADER) in request.META
+        )
 
     def process_response(self, request, response):
         """

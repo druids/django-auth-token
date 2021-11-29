@@ -6,8 +6,8 @@ from app.resource import SimpleAPI
 from auth_token.contrib.admin.views import LoginView as AdminLoginView
 from auth_token.contrib.admin.views import LogoutView as AdminLogoutView
 from auth_token.contrib.is_core_auth.views import LoginCodeVerificationView, TwoFactorLoginView
-from auth_token.contrib.rest_framework_auth.views import LoginView as RESTFrameworkLoginView
-from auth_token.contrib.rest_framework_auth.views import LogoutView as RESTFrameworkLogoutView
+from auth_token.contrib.rest_framework_auth.views import LoginView as RestFrameworkLoginView
+from auth_token.contrib.rest_framework_auth.views import LogoutView as RestFrameworkLogoutView
 from auth_token.contrib.rest_framework_auth.views import (
     LoginAuthToken, LogoutAuthToken, MobileLoginAuthToken, MobileRegisterToken
 )
@@ -25,8 +25,8 @@ urlpatterns = [
     url('api/logout/', LogoutAuthToken.as_view()),
     url('api/mobile-login/', MobileLoginAuthToken.as_view()),
     url('api/mobile-request-token/', MobileRegisterToken.as_view()),
-    url('api/docs/login/', RESTFrameworkLoginView.as_view()),
-    url('api/docs/logout/', RESTFrameworkLogoutView.as_view()),
+    url('api/docs/login/', RestFrameworkLoginView.as_view()),
+    url('api/docs/logout/', RestFrameworkLogoutView.as_view()),
     url('api/', SimpleAPI.as_view())
 ]
 

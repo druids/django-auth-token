@@ -3,11 +3,8 @@ from datetime import timedelta
 from django.conf import settings as django_settings
 from django.contrib.auth.hashers import check_password, make_password
 from django.contrib.auth.models import AnonymousUser
-from django.contrib.contenttypes.fields import GenericForeignKey
-from django.contrib.contenttypes.models import ContentType
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, IntegrityError, transaction
-from django.db.utils import IntegrityError
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
@@ -42,7 +39,7 @@ class BaseHashKeyManager(SmartManager):
         return hash_key(key)
 
     def create(self, key_generator, **kwargs):
-        for _ in range(settings.MAX_RANDOM_KEY_ITERATIONS):
+        for _i in range(settings.MAX_RANDOM_KEY_ITERATIONS):
             try:
                 key = key_generator()
                 hashed_key = self._hash_key(key, **kwargs)

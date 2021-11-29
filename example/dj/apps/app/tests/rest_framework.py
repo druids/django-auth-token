@@ -1,5 +1,5 @@
 from germanium.decorators import data_consumer
-from germanium.test_cases.rest import RESTTestCase
+from germanium.test_cases.rest import RestTestCase
 from germanium.tools.http import assert_http_ok, assert_http_unauthorized, assert_http_accepted, assert_http_bad_request
 from germanium.tools import assert_true, assert_false, assert_in, assert_not_in, assert_equal
 
@@ -9,7 +9,7 @@ from .base import BaseTestCaseMixin
 
 
 __all__ = (
-    'RESTFrameworkLoginISCoreTestCase',
+    'RestFrameworkLoginISCoreTestCase',
     'DeviceKeyTestCase'
 )
 
@@ -19,7 +19,7 @@ INDEX_URL = '/api/'
 API_LOGIN_URL = '/api/login/'
 
 
-class RESTFrameworkLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
+class RestFrameworkLoginISCoreTestCase(BaseTestCaseMixin, RestTestCase):
 
     API_LOGOUT_URL = '/api/logout/'
 
@@ -52,7 +52,7 @@ class RESTFrameworkLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
         )
 
 
-class DeviceKeyTestCase(BaseTestCaseMixin, RESTTestCase):
+class DeviceKeyTestCase(BaseTestCaseMixin, RestTestCase):
 
     API_REQUEST_MOBILE_TOKEN_URL = '/api/mobile-request-token/'
     API_MOBILE_LOGIN_URL = '/api/mobile-login/'

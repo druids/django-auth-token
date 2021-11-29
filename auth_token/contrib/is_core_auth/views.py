@@ -1,9 +1,7 @@
 from urllib.parse import quote_plus
 
 from django import forms
-from django.conf import settings as django_settings
 from django.contrib.auth import login as auth_login
-from django.contrib.auth.hashers import make_password
 from django.core.exceptions import ValidationError
 from django.forms.utils import ErrorList
 from django.http import HttpResponseRedirect
@@ -16,11 +14,10 @@ from auth_token.contrib.common.views import LoginView as _LoginView
 from auth_token.contrib.common.views import LogoutView as _LogoutView
 from auth_token.contrib.common.views import LoginCodeVerificationView as _LoginCodeVerificationView
 from auth_token.contrib.is_core_auth.forms import LoginCodeVerificationForm
-from auth_token.models import AuthorizationToken
 from auth_token.utils import create_authorization_request, grant_authorization_request, login, takeover
 
-from is_core.generic_views import DefaultCoreViewMixin
-from is_core.generic_views.mixins import GetCoreObjViewMixin
+from is_core.generic_views.base import DefaultCoreViewMixin
+from is_core.generic_views.mixins import GetDjangoObjectCoreViewMixin
 
 
 class LoginView(_LoginView):
@@ -77,7 +74,7 @@ class LogoutView(_LogoutView):
     template_name = 'is_core/logged_out.html'
 
 
-class UserTakeover(GetCoreObjViewMixin, DefaultCoreViewMixin, RedirectView):
+class UserTakeover(GetDjangoObjectCoreViewMixin, DefaultCoreViewMixin, RedirectView):
 
     def get_redirect_url(self, *args, **kwargs):
         return settings.TAKEOVER_REDIRECT_URL

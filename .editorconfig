@@ -1,0 +1,50 @@
+# EditorConfig helps developers define and maintain consistent
+# coding styles between different editors and IDEs
+# editorconfig.org
+
+root = true
+
+
+[*]
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+indent_style = space
+indent_size = 4
+
+[*.py]
+indent_style = space
+indent_size = 4
+line_length=120
+known_third_party=factory,ipware,responses,requests,nose,south,coverage,six,suds,geopy,user_agents,celery,vokativ,Levenshtein,dateutil,jsonfield,easymode,PIL,pillow,mock,xlrd,attrdict,jinja2,phonenumber_field
+multi_line_output=5
+lines_after_imports=2
+known_django=django
+sections=STDLIB,THIRDPARTY,DJANGO,GERMANIUM
+
+[*.{sass,scss,cljs,clj}]
+indent_style = space
+indent_size = 2
+
+[*.html]
+indent_style = space
+indent_size = 4
+
+[*.json]
+indent_style = space
+indent_size = 2
+
+[*.coffee]
+indent_style = space
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile*]
+indent_style = tab
+
+[*.yml]
+indent_style = space
+indent_size = 2

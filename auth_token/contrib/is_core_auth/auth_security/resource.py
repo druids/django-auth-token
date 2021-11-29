@@ -2,7 +2,6 @@ from auth_token.contrib.common.auth_security.validators import LOGIN_THROTTLING_
 from auth_token.contrib.is_core_auth.default.resource import AuthResource as DefaultAuthResource
 
 from security.enums import InputRequestSlug
-from security.models import InputLoggedRequest
 from security.decorators import throttling
 
 
@@ -16,10 +15,10 @@ class AuthResource(DefaultAuthResource):
         input_request_logger = getattr(self.request, 'input_request_logger', None)
         if input_request_logger:
             input_request_logger.set_slug(InputRequestSlug.SUCCESSFUL_LOGIN_REQUEST)
-        return super().form_valid(form)
+        return super()._sucessful_login(request)
 
     def _unsucessful_login(self, request):
         input_request_logger = getattr(self.request, 'input_request_logger', None)
         if input_request_logger:
             input_request_logger.set_slug(InputRequestSlug.UNSUCCESSFUL_LOGIN_REQUEST)
-        return super().form_invalid(form)
+        return super()._unsucessful_login(request)
