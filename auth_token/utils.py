@@ -28,6 +28,13 @@ from .signals import authorization_denied, authorization_granted, authorization_
 from ipware.ip import get_client_ip
 
 
+try:
+    import security
+    is_installed_security = True
+except ImportError:
+    is_installed_security = False
+
+
 def _load_request_backend(path):
     return import_string(path)
 
