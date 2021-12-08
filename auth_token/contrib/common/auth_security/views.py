@@ -1,10 +1,11 @@
 from django.contrib.auth.views import LoginView
 
-from auth_token.contrib.common.auth_security import LOGIN_THROTTLING_VALIDATORS
 from auth_token.contrib.common.default.views import TokenLoginView as DefaultTokenLoginView
 
 from security.decorators import throttling_all
 from security.enums import InputRequestSlug
+
+from .validators import LOGIN_THROTTLING_VALIDATORS
 
 
 @throttling_all(*LOGIN_THROTTLING_VALIDATORS)

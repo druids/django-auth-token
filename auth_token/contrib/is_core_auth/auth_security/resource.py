@@ -1,5 +1,5 @@
+from auth_token.contrib.common.auth_security.validators import LOGIN_THROTTLING_VALIDATORS
 from auth_token.contrib.is_core_auth.default.resource import AuthResource as DefaultAuthResource
-from auth_token.contrib.is_core_auth.auth_security import LOGIN_THROTTLING_VALIDATORS
 
 from security.enums import InputRequestSlug
 from security.models import InputLoggedRequest
