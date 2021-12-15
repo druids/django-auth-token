@@ -3,6 +3,7 @@ from auth_token.contrib.is_core_auth.default.resource import AuthResource as Def
 
 from security.enums import InputRequestSlug
 from security.decorators import throttling
+from security.utils import update_logged_request_data
 
 
 class AuthResource(DefaultAuthResource):
@@ -12,13 +13,9 @@ class AuthResource(DefaultAuthResource):
         return super().post()
 
     def _sucessful_login(self, request):
-        input_request_logger = getattr(self.request, 'input_request_logger', None)
-        if input_request_logger:
-            input_request_logger.set_slug(InputRequestSlug.SUCCESSFUL_LOGIN_REQUEST)
+        update_logged_request_data(self.request, slug=InputRequestSlug.SUCCESSFUL_LOGIN_REQUEST)
         return super()._sucessful_login(request)
 
     def _unsucessful_login(self, request):
-        input_request_logger = getattr(self.request, 'input_request_logger', None)
-        if input_request_logger:
-            input_request_logger.set_slug(InputRequestSlug.UNSUCCESSFUL_LOGIN_REQUEST)
+        update_logged_request_data(self.request, slug=InputRequestSlug.UNSUCCESSFUL_LOGIN_REQUEST)
         return super()._unsucessful_login(request)
