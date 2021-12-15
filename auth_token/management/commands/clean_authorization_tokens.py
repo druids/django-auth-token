@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.db.models import Count
 from django.conf import settings as django_settings
 from django.utils import timezone

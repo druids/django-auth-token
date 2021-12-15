@@ -33,9 +33,10 @@ DEFAULTS = {
                                                                   # OTP authorization backend.
     'AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR_CHARACTERS': string.digits,
     'AUTHORIZATION_OTP_BACKEND_DEFAULT_KEY_GENERATOR':
-        'auth_token.authorization_request.backends.default_otp_authorization_request_generator', # Default key generator
-                                                                                                 # for authorization
-                                                                                                 # OTP backend
+        'auth_token.authorization_request.backends.default_otp_authorization_request_generator',  # Default key
+                                                                                                  # generator
+                                                                                                  # for authorization
+                                                                                                  # OTP backend
     'RENEWAL_EXEMPT_HEADER': 'X-Authorization-Renewal-Exempt',  # Header name which causes that the token expiration
                                                                 # time will not be extended
     'EXPIRATION_HEADER': 'X-Authorization-Expiration',  # Header name which contains information about token expiration

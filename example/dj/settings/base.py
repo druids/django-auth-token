@@ -103,7 +103,7 @@ MIDDLEWARE = (
     'auth_token.middleware.TokenAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'is_core.middleware.RequestKwargsMiddleware',
-    'is_core.middleware.HTTPExceptionsMiddleware',
+    'is_core.middleware.HttpExceptionsMiddleware',
 )
 
 TEMPLATE_CONTEXT_PROCESSORS = (
@@ -229,3 +229,6 @@ AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'auth_token.backends.DeviceBackend',
 )
+
+
+IS_CORE_AUTH_RESOURCE_CLASS = 'auth_token.contrib.is_core_auth.resource.AuthResource'

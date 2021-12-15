@@ -1,16 +1,16 @@
 from django.utils.translation import ugettext
 
-from pyston.response import RESTErrorResponse, RESTNoContentResponse
-from pyston.exception import RESTException
+from pyston.response import RestErrorResponse, RestNoContentResponse
+from pyston.exception import RestException
 
 from is_core.auth.permissions import AllowAny
-from is_core.rest.resource import RESTResource
+from is_core.rest.resource import CoreResource
 
 from auth_token.contrib.is_core_auth.forms import TokenAuthenticationSmartForm
 from auth_token.utils import login, logout
 
 
-class AuthResource(RESTResource):
+class AuthResource(CoreResource):
 
     permission = AllowAny()
 
@@ -46,13 +46,13 @@ class AuthResource(RESTResource):
 
     def post(self):
         if not self.request.data:
-            raise RESTException(ugettext('Missing data'))
+            raise RestException(ugettext('Missing data'))
         form = self.get_form_class()(**self.get_form_kwargs())
 
         errors = form.is_invalid()
         if errors:
             self._unsucessful_login(self.request)
-            return RESTErrorResponse(errors)
+            return RestErrorResponse(errors)
 
         self._sucessful_login(self.request)
         self._login(form.get_user(), not form.is_permanent(), form)
@@ -61,7 +61,7 @@ class AuthResource(RESTResource):
     def delete(self):
         if self.request.user.is_authenticated:
             logout(self.request)
-        return RESTNoContentResponse()
+        return RestNoContentResponse()
 
     @classmethod
     def __init_core__(cls, core, pattern):

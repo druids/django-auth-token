@@ -38,6 +38,7 @@ cleanall: cleanvar
 
 pip:
 	$(PYTHON_BIN)/pip install -r requirements.txt
+	$(PYTHON_BIN)/pip install -e ../
 
 initvirtualenv:
 	virtualenv -p $(PYTHON) $(VIRTUAL_ENV)

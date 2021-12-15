@@ -1,13 +1,11 @@
 from django import forms
-from django.contrib.auth.hashers import check_password
 from django.utils.translation import ugettext as _
 
 from is_core.forms.forms import SmartForm
 
 from auth_token.config import settings
 from auth_token.contrib.common.forms import AuthenticationCleanMixin, TokenAuthenticationMixin
-from auth_token.models import AuthorizationToken, hash_key
-from auth_token.utils import authorize_login, get_valid_otp, check_authorization_request
+from auth_token.utils import authorize_login, check_authorization_request
 
 
 class TokenAuthenticationSmartForm(TokenAuthenticationMixin, AuthenticationCleanMixin, SmartForm):

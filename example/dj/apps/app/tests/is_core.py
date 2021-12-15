@@ -12,19 +12,19 @@ from auth_token.models import AuthorizationToken
 from freezegun import freeze_time
 from germanium.decorators import data_consumer
 from germanium.test_cases.client import ClientTestCase
-from germanium.test_cases.rest import RESTTestCase
+from germanium.test_cases.rest import RestTestCase
 from germanium.tools import assert_false, assert_in, assert_not_in, assert_true
 from germanium.tools.http import assert_http_accepted, assert_http_ok,  assert_http_redirect
 
 from .base import BaseTestCaseMixin
 
 __all__ = (
-   'RESTLoginISCoreTestCase',
+   'RestLoginISCoreTestCase',
    'UILoginISCoreTestCase',
 )
 
 
-class RESTLoginISCoreTestCase(BaseTestCaseMixin, RESTTestCase):
+class RestLoginISCoreTestCase(BaseTestCaseMixin, RestTestCase):
 
     INDEX_URL = '/is_core/'
     API_LOGIN_URL = '/is_core/api/login/'

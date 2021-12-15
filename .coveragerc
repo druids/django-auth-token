@@ -1,3 +1,11 @@
 [run]
-source = auth_token
-omit = */site-packages/*,*/migrations/*,*/lib/*,*/settings/*
+branch = true
+
+[report]
+omit =
+    *site-packages*
+    *tests*
+    *.tox*
+show_missing = True
+exclude_lines =
+    raise NotImplementedError

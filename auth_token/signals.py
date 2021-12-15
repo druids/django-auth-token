@@ -1,5 +1,3 @@
-from sys import intern
-
 from collections import defaultdict
 
 from django.dispatch.dispatcher import Signal
