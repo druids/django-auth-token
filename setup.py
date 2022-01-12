@@ -29,7 +29,7 @@ setup(
         'import_string==0.1.0',
         'django-chamber>=0.6.5',
         'django-generic-m2m-field>=0.0.4',
-        'django-choice-enumfields>=1.0.3',
+        'django-choice-enumfields>=1.1.0',
     ],
     zip_safe=False
 )

@@ -8,7 +8,7 @@ from django.db import models, IntegrityError, transaction
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 
-from enumfields import NumEnumField
+from enumfields import IntegerEnumField
 
 from chamber.exceptions import PersistenceException
 from chamber.models import SmartModel, SmartQuerySet, SmartManager
@@ -427,7 +427,7 @@ class AuthorizationRequest(SmartModel):
         null=True,
         blank=True
     )
-    result = NumEnumField(
+    result = IntegerEnumField(
         verbose_name=_('result'),
         enum=AuthorizationRequestResult,
         null=True,

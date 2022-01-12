@@ -1,16 +1,16 @@
 from django.utils.translation import ugettext_lazy as _
 
-from enumfields import Choice, ChoiceEnum
+from enumfields import Choice, IntegerChoicesEnum
 
 
-class AuthorizationRequestResult(ChoiceEnum):
+class AuthorizationRequestResult(IntegerChoicesEnum):
 
     GRANTED = Choice(1, _('granted'))
     DENIED = Choice(2, _('denied'))
     CANCELLED = Choice(3, _('cancelled'))
 
 
-class AuthorizationRequestState(ChoiceEnum):
+class AuthorizationRequestState(IntegerChoicesEnum):
 
     GRANTED = Choice(1, _('granted'))
     DENIED = Choice(2, _('denied'))

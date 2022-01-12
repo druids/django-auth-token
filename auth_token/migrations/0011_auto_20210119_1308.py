@@ -51,9 +51,9 @@ class Migration(migrations.Migration):
                 ('slug', models.SlugField(blank=True, null=True, verbose_name='slug')),
                 ('title', models.CharField(max_length=250, verbose_name='title')),
                 ('description', models.TextField(blank=True, null=True, verbose_name='description')),
-                ('result',
-                 enumfields.fields.NumEnumField(blank=True, enum=auth_token.enums.AuthorizationRequestResult, null=True,
-                                                verbose_name='result')),
+                ('result', enumfields.fields.IntegerEnumField(
+                    blank=True, enum=auth_token.enums.AuthorizationRequestResult, null=True, verbose_name='result'
+                )),
                 ('backend', models.CharField(max_length=250, verbose_name='backend')),
                 ('data', models.JSONField(blank=True, encoder=django.core.serializers.json.DjangoJSONEncoder, null=True,
                                           verbose_name='data')),
