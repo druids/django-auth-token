@@ -239,6 +239,8 @@ def logout(request):
             token.change_and_save(is_active=False)
             request.token = AnonymousAuthorizationToken()
 
+    if hasattr(request, 'session'):
+        request.session.flush()
     if hasattr(request, 'user'):
         request.user = AnonymousUser()
 
