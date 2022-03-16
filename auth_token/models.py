@@ -155,6 +155,9 @@ class AuthorizationToken(SmartModel):
         verbose_name = _('authorization token')
         verbose_name_plural = _('authorization tokens')
 
+    class SmartMeta:
+        is_cleaned_pre_save = False
+
     @property
     def active_takeover(self):
         return self.user_takeovers.filter(is_active=True).last()
