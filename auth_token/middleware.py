@@ -35,7 +35,7 @@ class TokenAuthenticationMiddleware:
         """
         Lazy set user and token
         """
-        request.token = get_token(request)
+        request.token = SimpleLazyObject(lambda: get_token(request))
         request.user = SimpleLazyObject(lambda: get_user(request))
         request._dont_enforce_csrf_checks = dont_enforce_csrf_checks(request)
 

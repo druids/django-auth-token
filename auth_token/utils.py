@@ -311,6 +311,9 @@ def get_token(request):
     from auth_token.models import AnonymousAuthorizationToken, AuthorizationToken, hash_key
     auth_token, token_is_from_header, token_is_from_cookie = get_token_key_from_request(request)
 
+    if auth_token is None:
+        return AnonymousAuthorizationToken()
+
     try:
         token = AuthorizationToken.objects.get(
             key=hash_key(auth_token),
