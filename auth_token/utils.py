@@ -356,10 +356,14 @@ def get_user_from_token(token):
     if token:
         backend_path = token.backend
         if backend_path in django_settings.AUTHENTICATION_BACKENDS and token.is_authenticated:
-            active_takeover_id = token.active_takeover.user.pk if token.active_takeover else None
-            user_id = token.user.pk
+            active_takeover_id = token.active_takeover.user_id if token.active_takeover else None
+            user_id = token.user_id
             backend = load_backend(backend_path)
-            return backend.get_user(active_takeover_id) or backend.get_user(user_id) or AnonymousUser()
+
+            if active_takeover_id:
+                return backend.get_user(active_takeover_id)
+            else:
+                return backend.get_user(user_id) or AnonymousUser()
     return AnonymousUser()
 
 
