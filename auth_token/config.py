@@ -15,6 +15,7 @@ DEFAULTS = {
     'HEADER_NAME': 'Authorization',  # Authorization token HTTP header name
     'HEADER_TOKEN_TYPE': 'Bearer',  # Type of the token
     'DEFAULT_TOKEN_AGE': 60 * 60,  # Default token expiration time (default: 1 hour)
+    'AGE_CALLBACK': None,  # Callback to calculate token expiration
     'LENGTH': 40,  # Length of authorization token
     'COUNT_USER_PRESERVED_TOKENS': 20,  # Maximum tokens that will be preserved per user
     'TAKEOVER_REDIRECT_URL': '/',  # The path where will be used after takeover another user token
@@ -58,7 +59,6 @@ DEFAULTS = {
         'auth_token.authorization_request.backends.MobileDeviceAuthorizationRequestBackend',
     ],  # List of backends used for authorization request authentication.
     'MOBILE_DEVICE_SECRET_PASSWORD_LENGTH': 64,  # Default length for generated mobile device secret token
-
 }
 
 

@@ -4,7 +4,7 @@ from django.utils.encoding import force_text
 from django.utils.functional import SimpleLazyObject
 from django.utils.http import http_date
 
-from auth_token.utils import header_name_to_django, dont_enforce_csrf_checks, get_token
+from auth_token.utils import header_name_to_django, dont_enforce_csrf_checks, get_auth_token_age, get_token
 from auth_token.utils import get_user as utils_get_user
 from auth_token.config import settings
 from auth_token.models import compute_authorization_token_expires_at
@@ -41,7 +41,7 @@ class TokenAuthenticationMiddleware:
 
     def _update_token_and_cookie(self, request, response, max_age, expires):
         request.token.change_and_save(
-            expires_at=compute_authorization_token_expires_at(),
+            expires_at=compute_authorization_token_expires_at(get_auth_token_age(request)),
             update_only_changed_fields=True
         )
         if settings.COOKIE and request.token.allowed_cookie:
