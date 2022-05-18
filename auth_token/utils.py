@@ -54,6 +54,10 @@ def get_authorization_backend(path, raise_exception=False):
     return backend() if backend else None
 
 
+def get_auth_token_age(request):
+    return import_string(settings.AGE_CALLBACK)(request) if settings.AGE_CALLBACK else None
+
+
 def compute_expires_at(expiration):
     """
     Compute expires at datetime from expiration in seconds.
@@ -174,7 +178,6 @@ def login(request, user, auth_slug=None, related_objs=None, backend=None, allowe
                 'therefore must provide the `backend` argument or set the '
                 '`backend` attribute on the user.'
             )
-
     token = AuthorizationToken.objects.create(
         user=user,
         user_agent=request.META.get('HTTP_USER_AGENT', '')[:256],
@@ -184,7 +187,8 @@ def login(request, user, auth_slug=None, related_objs=None, backend=None, allowe
         allowed_cookie=allowed_cookie,
         allowed_header=allowed_header,
         is_authenticated=not two_factor_login,
-        expires_at=compute_authorization_token_expires_at(expiration),
+        expires_at=compute_authorization_token_expires_at(
+            expiration if expiration is not None else get_auth_token_age(request)),
         preserve_cookie=preserve_cookie,
         mobile_device=mobile_device or getattr(user, 'authenticated_mobile_device', None)
     )

@@ -49,6 +49,10 @@ def test_otp_generator():
     return '12345'
 
 
+def auth_token_age_test(request):
+    return 1234
+
+
 class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
 
     def set_up(self):
@@ -734,3 +738,12 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
     def test_default_otp_authorization_request_generator_should_generate_6_length_digit_key(self):
         for _ in range(20):
             assert_true(re.match(r'^[0-9]{6}$', default_otp_authorization_request_generator()))
+
+    @data_consumer('create_user')
+    @override_settings(AUTH_TOKEN_AGE_CALLBACK='app.tests.utils.auth_token_age_test')
+    def test_get_auth_token_age_should_return_(self, user):
+        with freeze_time():
+            request = self.requiest_factory.get('/')
+            login(request, user, backend='LoginBackend', allowed_cookie=False)
+            token = request.token
+            assert_equal(token.expires_at, now() + timedelta(seconds=1234))
