@@ -49,7 +49,7 @@ def test_otp_generator():
     return '12345'
 
 
-def auth_token_age_test(request):
+def auth_token_age_test(request, user, auth_token):
     return 1234
 
 

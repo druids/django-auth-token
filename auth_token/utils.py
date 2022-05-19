@@ -54,8 +54,8 @@ def get_authorization_backend(path, raise_exception=False):
     return backend() if backend else None
 
 
-def get_auth_token_age(request):
-    return import_string(settings.AGE_CALLBACK)(request) if settings.AGE_CALLBACK else None
+def get_auth_token_age(request, user, auth_slug):
+    return import_string(settings.AGE_CALLBACK)(request, user, auth_slug) if settings.AGE_CALLBACK else None
 
 
 def compute_expires_at(expiration):
@@ -188,7 +188,7 @@ def login(request, user, auth_slug=None, related_objs=None, backend=None, allowe
         allowed_header=allowed_header,
         is_authenticated=not two_factor_login,
         expires_at=compute_authorization_token_expires_at(
-            expiration if expiration is not None else get_auth_token_age(request)),
+            expiration if expiration is not None else get_auth_token_age(request, user, auth_slug)),
         preserve_cookie=preserve_cookie,
         mobile_device=mobile_device or getattr(user, 'authenticated_mobile_device', None)
     )

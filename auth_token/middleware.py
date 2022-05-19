@@ -41,7 +41,8 @@ class TokenAuthenticationMiddleware:
 
     def _update_token_and_cookie(self, request, response, max_age, expires):
         request.token.change_and_save(
-            expires_at=compute_authorization_token_expires_at(get_auth_token_age(request)),
+            expires_at=compute_authorization_token_expires_at(get_auth_token_age(
+                request, request.token.user, request.token.auth_slug)),
             update_only_changed_fields=True
         )
         if settings.COOKIE and request.token.allowed_cookie:
