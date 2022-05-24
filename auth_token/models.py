@@ -174,7 +174,7 @@ class AuthorizationToken(SmartModel):
 class AnonymousAuthorizationToken:
 
     key = None
-    user = AnonymousUser
+    user = AnonymousUser()
     created_at = None
     is_active = False
     user_agent = None
