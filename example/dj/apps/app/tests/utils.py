@@ -318,12 +318,16 @@ class UtilsTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_equal(get_user_from_token(request.token), user)
         request.META['HTTP_AUTHORIZATION'] = 'Bearer {}'.format(request.token.secret_key)
         takeovered_user = self.create_user(username='takeovered', email='takeover@test.cz')
+        with override_settings(AUTH_TOKEN_TAKEOVER_ENABLED=False):
+            assert_false(takeover(request, takeovered_user))
         assert_true(takeover(request, takeovered_user))
         assert_equal(request.token.user_takeovers.filter(is_active=True).count(), 1)
-        assert_equal(get_user_from_token(request.token), takeovered_user)
+        with override_settings(AUTH_TOKEN_TAKEOVER_ENABLED=False):
+            assert_equal(get_user_from_token(request.token), user)
+        assert_equal(get_user_from_token(request.token.refresh_from_db()), takeovered_user)
         logout(request)
         assert_equal(request.token.user_takeovers.filter(is_active=True).count(), 0)
-        assert_equal(get_user_from_token(request.token), user)
+        assert_equal(get_user_from_token(request.token.refresh_from_db()), user)
         logout(request)
         assert_is_instance(get_user_from_token(request.token), AnonymousUser)
 

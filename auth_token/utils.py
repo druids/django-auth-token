@@ -360,7 +360,9 @@ def get_user_from_token(token):
     if token:
         backend_path = token.backend
         if backend_path in django_settings.AUTHENTICATION_BACKENDS and token.is_authenticated:
-            active_takeover_id = token.active_takeover.user_id if token.active_takeover else None
+            active_takeover_id = token.active_takeover.user_id if (
+                settings.TAKEOVER_ENABLED and token.active_takeover
+            ) else None
             user_id = token.user_id
             backend = load_backend(backend_path)
 
@@ -394,12 +396,17 @@ def takeover(request, user):
     Returns:
         True if takeover was performed or False.
     """
-    if not hasattr(request, 'user') or not request.user.is_authenticated or request.user == user:
-        return False
-    else:
+    if (
+        settings.TAKEOVER_ENABLED
+        and hasattr(request, 'user')
+        and request.user.is_authenticated
+        and request.user != user
+    ):
         request.token.user_takeovers.update(is_active=False)
         request.token.user_takeovers.create(user=user, is_active=True)
         return True
+    else:
+        return False
 
 
 def deactivate_otp(slug, key=None, related_objects=None):
