@@ -1,3 +1,4 @@
+from datetime import timedelta
 import time
 
 from django.utils.encoding import force_text
@@ -40,11 +41,11 @@ class TokenAuthenticationMiddleware:
         request._dont_enforce_csrf_checks = dont_enforce_csrf_checks(request)
 
     def _update_token_and_cookie(self, request, response, max_age, expires):
-        request.token.change_and_save(
-            expires_at=compute_authorization_token_expires_at(get_auth_token_age(
-                request, request.token.user, request.token.auth_slug)),
-            update_only_changed_fields=True
+        expires_at = compute_authorization_token_expires_at(
+            get_auth_token_age(request, request.token.user, request.token.auth_slug),
         )
+        if expires_at - request.token.expires_at >= timedelta(seconds=settings.EXPIRATION_DELTA):
+            request.token.change_and_save(expires_at=expires_at, update_only_changed_fields=True)
         if settings.COOKIE and request.token.allowed_cookie:
             response.set_cookie(settings.COOKIE_NAME, force_text(request.token.secret_key), max_age=max_age,
                                 expires=expires, httponly=settings.COOKIE_HTTPONLY,

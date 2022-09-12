@@ -189,5 +189,11 @@ Setup
 
    Number of characters of key which generates default key generator of ``auth_token.authorization_request.backends.OTPAuthorizationRequestBackend`` class. Default value is ``6``.
 
+.. attribute:: AUTH_TOKEN_EXPIRATION_DELTA
 
+  Authorization token expiration will be extended during HTTP request, only if original expiration is at least
+  "X" seconds older, than new one. Default value is ``0`` seconds, i.e. expiration will be always extended.
 
+.. attribute:: AUTH_TOKEN_TAKEOVER_ENABLED
+
+  Turns on/off takeover functionality. Default value is ``True``, i.e. takeover is enabled.

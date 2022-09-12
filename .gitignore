@@ -66,3 +66,6 @@ build/config
 ########
 .buile
 
+# Python #
+##########
+django_auth_token.egg-info/

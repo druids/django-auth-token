@@ -59,6 +59,9 @@ DEFAULTS = {
         'auth_token.authorization_request.backends.MobileDeviceAuthorizationRequestBackend',
     ],  # List of backends used for authorization request authentication.
     'MOBILE_DEVICE_SECRET_PASSWORD_LENGTH': 64,  # Default length for generated mobile device secret token
+    'EXPIRATION_DELTA': 0,  # Authorization token expiration will be extended, only if original expiration is at
+                            # least "X" seconds older, than new one (default: 0 seconds, i.e. always extend)
+    'TAKEOVER_ENABLED': True,  # Turns on/off takeover functionality
 }
 
 

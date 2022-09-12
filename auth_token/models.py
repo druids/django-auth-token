@@ -6,6 +6,7 @@ from django.contrib.auth.models import AnonymousUser
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, IntegrityError, transaction
 from django.utils import timezone
+from django.utils.functional import cached_property
 from django.utils.translation import ugettext_lazy as _
 
 from enumfields import IntegerEnumField
@@ -158,9 +159,9 @@ class AuthorizationToken(SmartModel):
     class SmartMeta:
         is_cleaned_pre_save = False
 
-    @property
+    @cached_property
     def active_takeover(self):
-        return self.user_takeovers.filter(is_active=True).last()
+        return self.user_takeovers.filter(is_active=True).last('created_at', 'pk')
 
     @property
     def is_expired(self):
