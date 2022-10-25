@@ -7,7 +7,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, IntegrityError, transaction
 from django.utils import timezone
 from django.utils.functional import cached_property
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from enumfields import IntegerEnumField
 
@@ -267,7 +267,8 @@ class MobileDevice(SmartModel):
         verbose_name=_('UUID'),
         max_length=36,
         null=False,
-        blank=False
+        blank=False,
+        db_index=True
     )
     name = models.CharField(
         verbose_name=_('name'),
@@ -328,8 +329,14 @@ class MobileDevice(SmartModel):
                 is_primary=False
             )
 
-    def check_password(self, token):
-        return check_password(str(token), self.login_token)
+    def set_login_token(self, raw_token):
+        self.login_token = make_password(raw_token)
+
+    def check_login_token(self, raw_token):
+        def setter(raw_token):
+            self.set_login_token(raw_token)
+            self.save(update_fields=['login_token'])
+        return check_password(raw_token, self.login_token, setter)
 
 
 class OneTimePasswordManager(BaseHashKeyManager):

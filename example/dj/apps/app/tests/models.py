@@ -2,11 +2,12 @@ from datetime import timedelta
 
 from uuid import uuid4
 
+from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 
 from germanium.decorators import data_consumer
 from germanium.test_cases.default import GermaniumTestCase
-from germanium.tools import assert_equal, assert_true, assert_false, assert_raises
+from germanium.tools import assert_equal, assert_true, assert_false, assert_raises, assert_not_equal
 
 from auth_token.models import AuthorizationToken, MobileDevice, MobileDeviceAlreadyExists
 from auth_token.config import settings
@@ -57,7 +58,6 @@ class TokenTestCase(BaseTestCaseMixin, GermaniumTestCase):
             MobileDevice.objects.activate_or_create(uuid, user, is_primary=True)
 
     def test_two_active_mobile_devices_with_same_uuid_should_be_created(self):
-        uuid = uuid4
         MobileDevice.objects.activate_or_create(uuid4, self.create_user(username='test1'), is_primary=True)
         MobileDevice.objects.activate_or_create(uuid4, self.create_user(username='test2'), is_primary=True)
 
@@ -71,3 +71,20 @@ class TokenTestCase(BaseTestCaseMixin, GermaniumTestCase):
         assert_false(mobile_device.is_primary)
         assert_equal(mobile_device.name, 'test')
         assert_equal(mobile_device.slug, 'test')
+
+    @data_consumer('create_user')
+    def test_mobile_device_login_token_should_be_updated_with_check_login_token(self, user):
+        mobile_device = MobileDevice.objects.activate_or_create(uuid4, user, is_primary=True)
+        mobile_device.change_and_save(login_token=make_password('test', hasher='md5'))
+        assert_true(mobile_device.check_login_token('test'))
+        assert_true(mobile_device.login_token.startswith('pbkdf2_sha256'))
+
+    @data_consumer('create_user')
+    def test_mobile_device_login_token_should_be_updated_with_set_login_token(self, user):
+        mobile_device = MobileDevice.objects.activate_or_create(uuid4, user, is_primary=True)
+        prev_login_token = mobile_device.login_token
+        mobile_device.set_login_token('test')
+        assert_not_equal(mobile_device.login_token, prev_login_token)
+        assert_true(mobile_device.login_token.startswith('pbkdf2_sha256'))
+        assert_true(mobile_device.check_login_token('test'))
+

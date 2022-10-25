@@ -1,7 +1,7 @@
 import warnings
 
 from django import forms
-from django.utils.translation import ugettext, ugettext_lazy as _
+from django.utils.translation import gettext, gettext_lazy as _
 from django.contrib.auth import authenticate, get_user_model
 
 from auth_token.config import settings
@@ -40,7 +40,7 @@ class AuthenticationMixin:
             self.fields[self.username_field_name].label = self.username_field.verbose_name
 
     def init_password_field(self):
-        self.fields['password'] = forms.CharField(label=ugettext('Password'), widget=forms.PasswordInput)
+        self.fields['password'] = forms.CharField(label=gettext('Password'), widget=forms.PasswordInput)
 
     def get_user_model(self):
         return get_user_model()

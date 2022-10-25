@@ -92,8 +92,8 @@ class DeviceKeyTestCase(BaseTestCaseMixin, RestTestCase):
         device_keys = MobileDevice.objects.all()
         assert_equal(1, device_keys.count())
         device_key = device_keys[0]
-        assert_true(device_key.check_password(mobile_token))
-        assert_false(device_key.check_password('XXX'))
+        assert_true(device_key.check_login_token(mobile_token))
+        assert_false(device_key.check_login_token('XXX'))
 
     @data_consumer('create_user')
     def test_user_should_not_register_same_device_keys(self, user):

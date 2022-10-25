@@ -1,4 +1,4 @@
-from django.utils.translation import ugettext
+from django.utils.translation import gettext
 
 from pyston.response import RestErrorResponse, RestNoContentResponse
 from pyston.exception import RestException
@@ -46,7 +46,7 @@ class AuthResource(CoreResource):
 
     def post(self):
         if not self.request.data:
-            raise RestException(ugettext('Missing data'))
+            raise RestException(gettext('Missing data'))
         form = self.get_form_class()(**self.get_form_kwargs())
 
         errors = form.is_invalid()
