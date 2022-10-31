@@ -105,7 +105,7 @@ class MobileDeviceAuthorizationRequestBackend(BaseAuthorizationRequestBackend):
 
     def _get_valid_mobile_device(self, mobile_device_uuid=None, mobile_login_token=None):
         for mobile_device in MobileDevice.objects.filter(uuid=mobile_device_uuid, is_active=True):
-            if mobile_device.check_password(mobile_login_token):
+            if mobile_device.check_login_token(mobile_login_token):
                 return mobile_device
         return None
 

@@ -19,7 +19,7 @@ class DeviceBackend(ModelBackend):
             raise PermissionDenied('MobileDevice with id "{}" not found.'.format(mobile_device_uuid))
 
         for mobile_device in mobile_device_qs:
-            if mobile_device.check_password(mobile_login_token):
+            if mobile_device.check_login_token(mobile_login_token):
                 user = self.get_user(mobile_device.user_id)
                 if user:
                     mobile_device.change_and_save(

@@ -1,5 +1,5 @@
 from django.contrib.auth import authenticate
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from auth_token.models import MobileDevice, MobileDeviceAlreadyExists
 
@@ -8,13 +8,18 @@ from rest_framework import serializers
 
 class AuthTokenSerializer(serializers.Serializer):
 
-    username = serializers.CharField(label=_('Username'))
+    username = serializers.CharField(
+        label=_('Username')
+    )
     password = serializers.CharField(
         label=_('Password'),
         style={'input_type': 'password'},
         trim_whitespace=False
     )
-    permanent = serializers.BooleanField(label=_('Permanent'), required=False)
+    permanent = serializers.BooleanField(
+        label=_('Permanent'),
+        required=False
+    )
 
     def validate(self, attrs):
         username = attrs.get('username')
@@ -40,7 +45,9 @@ class AuthTokenSerializer(serializers.Serializer):
 
 class MobileAuthTokenSerializer(serializers.Serializer):
 
-    uuid = serializers.CharField(label=_('device UUID'))
+    uuid = serializers.CharField(
+        label=_('device UUID')
+    )
     login_device_token = serializers.CharField(
         label=_('Device Token'),
         style={'input_type': 'password'},
@@ -70,7 +77,9 @@ class MobileAuthTokenSerializer(serializers.Serializer):
 
 class MobileAuthTokenRegisterSerializer(serializers.Serializer):
 
-    uuid = serializers.CharField(label=_('device UUID'))
+    uuid = serializers.CharField(
+        label=_('device UUID')
+    )
 
     def validate(self, attrs):
         uuid = attrs.get('uuid')
