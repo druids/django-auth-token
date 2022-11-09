@@ -27,9 +27,10 @@ setup(
         'django>=2.2.14,<4.0',
         'django-ipware>=3.0.2',
         'import_string==0.1.0',
-        'django-chamber>=0.6.5',
+        'django-chamber>=0.6.14',
         'django-generic-m2m-field>=0.0.4',
         'django-choice-enumfields>=1.1.0',
+        'tqdm>=4.62.3',
     ],
     zip_safe=False
 )
