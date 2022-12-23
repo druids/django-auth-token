@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-02-26 19:10+0100\n"
+"POT-Creation-Date: 2022-12-23 18:30+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,15 +18,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n==1) ? 0 : (n>=2 && n<=4) ? 1 : 2;\n"
 
-#: config.py:24
+#: config.py:26
 msgid "Second factor authorization"
 msgstr "Druhý faktor autorizace"
 
-#: config.py:25
+#: config.py:27
 msgid "Please insert code for second factor authorization"
 msgstr "Prosím vložte kód pro druhý faktor autorizace"
 
-#: contrib/common/forms.py:16
+#: contrib/common/default/views.py:44
+msgid "Continue with Microsoft account"
+msgstr "Pokračovat pomocí účtu Microsoft"
+
+#: contrib/common/forms.py:18
 #, python-format
 msgid ""
 "Please enter a correct %(username)s and password. Note that both fields may "
@@ -35,65 +39,73 @@ msgstr ""
 "Vložte prosím správné %(username)s a heslo. Obě pole rozlišují velká a malá "
 "písmena."
 
-#: contrib/common/forms.py:18
+#: contrib/common/forms.py:20
 msgid "This account is inactive."
 msgstr "Tento účet je neaktivní."
 
-#: contrib/common/forms.py:42 contrib/rest_framework_auth/serializers.py:13
+#: contrib/common/forms.py:43 contrib/rest_framework_auth/serializers.py:15
 msgid "Password"
 msgstr "Heslo"
 
-#: contrib/common/forms.py:89
+#: contrib/common/forms.py:90
 msgid "Remember user"
 msgstr "Zapamatovat uživatele"
 
-#: contrib/is_core_auth/default/resource.py:50
+#: contrib/is_core_auth/default/resource.py:49
 msgid "Missing data"
 msgstr "Chybějící údaje"
 
-#: contrib/is_core_auth/forms.py:19
+#: contrib/is_core_auth/forms.py:17
 msgid "code"
 msgstr "kód"
 
-#: contrib/is_core_auth/forms.py:44
+#: contrib/is_core_auth/forms.py:42
 msgid "The inserted value does not correspond to the sent code."
 msgstr "Vložená hodnota neodpovídá zaslanému kódu."
+
+#: contrib/ms_sso/views.py:35 contrib/ms_sso/views.py:40
+msgid "Microsoft SSO login was unsuccessful, please try it again"
+msgstr "Přihlášení pomocí Microsoft účtu bylo neúspěšné, prosím zkuste to znovu"
+
+#: contrib/ms_sso/views.py:46
+msgid "Microsoft SSO login was unsuccessful, please use another login method"
+msgstr "Přihlášení pomocí Microsoft účtu bylo neúspěšné, prosím zkuste jiný způsob přihlášení"
 
 #: contrib/rest_framework_auth/authentication.py:24
 msgid "Invalid authorization token."
 msgstr "Neplatný autorizační kód."
 
-#: contrib/rest_framework_auth/serializers.py:11
+#: contrib/rest_framework_auth/serializers.py:12
 msgid "Username"
 msgstr "Uživatelské jméno"
 
-#: contrib/rest_framework_auth/serializers.py:17
+#: contrib/rest_framework_auth/serializers.py:20
 msgid "Permanent"
 msgstr "Zapamatovat uživatele"
 
-#: contrib/rest_framework_auth/serializers.py:31
-#: contrib/rest_framework_auth/serializers.py:61
+#: contrib/rest_framework_auth/serializers.py:36
+#: contrib/rest_framework_auth/serializers.py:68
 msgid "Unable to log in with provided credentials."
 msgstr "Pro zadané údaje není možné uživatele přihlásit."
 
-#: contrib/rest_framework_auth/serializers.py:34
+#: contrib/rest_framework_auth/serializers.py:39
 msgid "Must include \"username\" and \"password\"."
 msgstr "Musí obsahovat \"uživatelské jméno\" a \"heslo\"."
 
-#: contrib/rest_framework_auth/serializers.py:43
-#: contrib/rest_framework_auth/serializers.py:73
+#: contrib/rest_framework_auth/serializers.py:49
+#: contrib/rest_framework_auth/serializers.py:81
 msgid "device UUID"
 msgstr "UUID zařízení"
 
-#: contrib/rest_framework_auth/serializers.py:45
+#: contrib/rest_framework_auth/serializers.py:52
 msgid "Device Token"
 msgstr "Kód zařízení"
 
-#: contrib/rest_framework_auth/serializers.py:65
+#: contrib/rest_framework_auth/serializers.py:72
 msgid "Must include \"uuid\" and \"token\"."
 msgstr "Musí obsahovat \"uuid\" a \"kód\"."
 
-#: contrib/rest_framework_auth/serializers.py:83
+#: contrib/rest_framework_auth/serializers.py:92
 msgid "Device key was already registered."
 msgstr "Klíč zařízení je již zaregistrován."
 
@@ -117,130 +129,130 @@ msgstr "čeká"
 msgid "expired"
 msgstr "expirováno"
 
-#: models.py:67 models.py:346
+#: models.py:70 models.py:358
 msgid "key"
 msgstr "klíč"
 
-#: models.py:74 models.py:209 models.py:288 models.py:399
+#: models.py:78 models.py:212 models.py:292 models.py:412
 msgid "user"
 msgstr "uživatel"
 
-#: models.py:82 models.py:298 models.py:363
+#: models.py:86 models.py:302 models.py:376
 msgid "is active"
 msgstr "je aktivní"
 
-#: models.py:86 models.py:302
+#: models.py:90 models.py:306
 msgid "user agent"
 msgstr "user agent"
 
-#: models.py:92 models.py:353 models.py:441
+#: models.py:96 models.py:366 models.py:454
 msgid "expires at"
 msgstr "datum a čas expirace"
 
-#: models.py:98
+#: models.py:102
 msgid "IP"
 msgstr "IP"
 
-#: models.py:103 models.py:276 models.py:358 models.py:407
+#: models.py:107 models.py:280 models.py:371 models.py:420
 msgid "slug"
 msgstr "slug"
 
-#: models.py:108 models.py:412
+#: models.py:112 models.py:425
 msgid "backend"
 msgstr "backend"
 
-#: models.py:114
+#: models.py:118
 msgid "is allowed cookie"
 msgstr "povoleno cookie"
 
-#: models.py:118
+#: models.py:122
 msgid "is allowed header"
 msgstr "povoleny hlavičky"
 
-#: models.py:122
+#: models.py:126
 msgid "is authenticated"
 msgstr "ověřený"
 
-#: models.py:128
+#: models.py:132
 msgid "preserve cookie"
 msgstr "zachovat cookie"
 
-#: models.py:134 models.py:322
+#: models.py:138 models.py:318
 msgid "mobile device"
 msgstr "mobilní zařízení"
 
-#: models.py:152 models.py:203 models.py:391
+#: models.py:156 models.py:206 models.py:404
 msgid "authorization token"
 msgstr "autorizační token"
 
-#: models.py:153
+#: models.py:157
 msgid "authorization tokens"
 msgstr "autorizační tokeny"
 
-#: models.py:219
+#: models.py:222
 msgid "authorization takeover"
 msgstr "převzetí přihlášení"
 
-#: models.py:220
+#: models.py:223
 msgid "authorization takeovers"
 msgstr "převzetí přihlášení"
 
-#: models.py:264
+#: models.py:267
 msgid "UUID"
 msgstr "UUID"
 
-#: models.py:270
+#: models.py:274
 msgid "name"
 msgstr "jméno"
 
-#: models.py:281
+#: models.py:285
 msgid "last login"
 msgstr "poslední přihlášení"
 
-#: models.py:293
+#: models.py:297
 msgid "login token"
 msgstr "přihlašovací token"
 
-#: models.py:308
+#: models.py:312
 msgid "is primary"
 msgstr "primární"
 
-#: models.py:323
+#: models.py:319
 msgid "mobile devices"
 msgstr "mobilní zařízení"
 
-#: models.py:367 models.py:435
+#: models.py:380 models.py:448
 msgid "data"
 msgstr "data"
 
-#: models.py:380
+#: models.py:393
 msgid "one time password"
 msgstr "jednorázové heslo"
 
-#: models.py:381
+#: models.py:394
 msgid "one time passwords"
 msgstr "jednorázová hesla"
 
-#: models.py:418
+#: models.py:431
 msgid "title"
 msgstr "název"
 
-#: models.py:424
+#: models.py:437
 msgid "description"
 msgstr "popis"
 
-#: models.py:429
+#: models.py:442
 msgid "result"
 msgstr "výsledek"
 
-#: models.py:446
+#: models.py:459
 msgid "granted at"
 msgstr "datum a čas udělení"
 
-#: models.py:454
+#: models.py:467
 msgid "authorization request"
 msgstr "žádost o autorizaci"
 
-#: models.py:455
+#: models.py:468
 msgid "authorization requests"
 msgstr "žádosti o autorizace"

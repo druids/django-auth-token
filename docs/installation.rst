@@ -197,3 +197,30 @@ Setup
 .. attribute:: AUTH_TOKEN_TAKEOVER_ENABLED
 
   Turns on/off takeover functionality. Default value is ``True``, i.e. takeover is enabled.
+
+.. attribute:: AUTH_TOKEN_MS_SSO_APP_ID
+
+  Set AppID for MS SSO authentication. Value must be set with ``auth_token.contrib.ms_sso.backends.MsSsoBackend``
+
+.. attribute:: AUTH_TOKEN_TENANT_ID
+
+  Set TentnatId for MS SSO authentication. Value must be set with ``auth_token.contrib.ms_sso.backends.MsSsoBackend``
+
+MS SSO
+------
+
+To allow MS SSO authentization you must install package with msal ``django-auth-token[msal]``, set settings ``AUTH_TOKEN_MS_SSO_APP_ID`` and ``AUTH_TOKEN_TENANT_ID`` and add ``auth_token.contrib.ms_sso.backends.MsSsoBackend`` to ``AUTHENTICATION_BACKENDS`` backends in your Django settings::
+
+    AUTH_TOKEN_MS_SSO_APP_ID = '__ your app id __'
+    AUTH_TOKEN_MS_SSO_TENANT_ID = '__ your tenant id __'
+
+
+Next you must include ``auth_token.contrib.ms_sso.urls`` in your URLS settings::
+
+    from auth_token.contrib.ms_sso import urls as ms_sso_urls
+    urlpatterns = static_pyston() + [
+        url(r'^', include(ms_sso_urls)),
+    ]
+
+
+Finally you can use MS SSO login via redirect via URL ``/login/mso`` and set callback in MS settings to ``/login/mso/callback``

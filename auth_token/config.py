@@ -62,6 +62,8 @@ DEFAULTS = {
     'EXPIRATION_DELTA': 0,  # Authorization token expiration will be extended, only if original expiration is at
                             # least "X" seconds older, than new one (default: 0 seconds, i.e. always extend)
     'TAKEOVER_ENABLED': True,  # Turns on/off takeover functionality
+    'MS_SSO_APP_ID': None,  # Set AppID for MS SSO authentication
+    'MS_SSO_TENANT_ID': None,  # Set TentnatID for MS SSO authentication
 }
 
 

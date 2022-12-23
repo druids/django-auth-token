@@ -1,5 +1,7 @@
 from django.contrib.auth.views import LoginView, LogoutView
 from django.utils.decorators import method_decorator
+from django.urls import reverse, NoReverseMatch
+from django.utils.translation import gettext
 from django.http import HttpResponseRedirect
 from django.views.decorators.cache import never_cache
 
@@ -32,6 +34,23 @@ class TokenLoginView(LoginView):
         """
         self._login(form.get_user(), not form.is_permanent(), form)
         return HttpResponseRedirect(self.get_success_url())
+
+    def _get_sso_login_methods(self):
+        try:
+            return [
+                {
+                    'name': 'microsoft',
+                    'url': f'{reverse("ms-sso-login")}?next={self.request.GET.get("next", "/")}',
+                    'label': gettext('Continue with Microsoft account')
+                }
+            ]
+        except NoReverseMatch:
+            return []
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['sso_login_methods'] = self._get_sso_login_methods()
+        return context
 
 
 class TokenLogoutView(LogoutView):

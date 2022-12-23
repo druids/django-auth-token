@@ -36,7 +36,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install ${{ matrix.django-version }}
         pip install -r example/requirements.txt
-        pip install -e .
+        pip install -e .[msdal]
     - name: Flake
       run: |
         flake8 --config .config/flake8 --ignore E1,E23,W503 auth_token
