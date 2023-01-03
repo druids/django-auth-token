@@ -232,3 +232,5 @@ AUTHENTICATION_BACKENDS = (
 
 
 IS_CORE_AUTH_RESOURCE_CLASS = 'auth_token.contrib.is_core_auth.resource.AuthResource'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
