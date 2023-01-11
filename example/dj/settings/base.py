@@ -228,9 +228,13 @@ REST_FRAMEWORK = {
 AUTHENTICATION_BACKENDS = (
     'django.contrib.auth.backends.ModelBackend',
     'auth_token.backends.DeviceBackend',
+    'auth_token.contrib.ms_sso.backends.MsSsoBackend',
 )
 
 
 IS_CORE_AUTH_RESOURCE_CLASS = 'auth_token.contrib.is_core_auth.resource.AuthResource'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+
+AUTH_TOKEN_MS_SSO_APP_ID = 'testappid'
+AUTH_TOKEN_MS_SSO_TENANT_ID = 'testtenantid'

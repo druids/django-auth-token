@@ -11,12 +11,15 @@ from auth_token.contrib.rest_framework_auth.views import LogoutView as RestFrame
 from auth_token.contrib.rest_framework_auth.views import (
     LoginAuthToken, LogoutAuthToken, MobileLoginAuthToken, MobileRegisterToken
 )
+from auth_token.contrib.ms_sso import urls as ms_sso_urls
+
 from is_core.site import site as is_core_site
 
 admin.site.login = AdminLoginView.as_view()
 admin.site.logout = AdminLogoutView.as_view()
 
 urlpatterns = [
+    url(r'^', include(ms_sso_urls)),
     url('admin/', admin.site.urls),
     url('is_core/', include(is_core_site.urls)),
     url('two-factor-login/', TwoFactorLoginView.as_view()),

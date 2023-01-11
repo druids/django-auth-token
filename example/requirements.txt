@@ -5,3 +5,4 @@ flake8
 django-is-core==2.24.0
 djangorestframework==3.12.2
 freezegun==1.0.0
+responses==0.22.0

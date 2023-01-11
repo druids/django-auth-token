@@ -1,5 +1,5 @@
 #
-# Run install_packages as root. 
+# Run install_packages as root.
 # Then run local_install from current directory (for local install + app build).
 #
 
@@ -27,7 +27,7 @@ test_modules = app.tests
 clean:
 	find . -name "*.pyc" -delete;
 	find . -type d -empty -delete;
-	
+
 cleanvirtualenv:
 	rm -rf $(VIRTUAL_ENV)
 
@@ -38,7 +38,7 @@ cleanall: cleanvar
 
 pip:
 	$(PYTHON_BIN)/pip install -r requirements.txt
-	$(PYTHON_BIN)/pip install -e ../
+	$(PYTHON_BIN)/pip install -e ../.[msdal]
 
 initvirtualenv:
 	virtualenv -p $(PYTHON) $(VIRTUAL_ENV)
@@ -93,7 +93,7 @@ runserver:
 schemamigration:
 ifeq ($(force), 1)
 	-rm -rf "dj/apps/$(app)/migrations"
-	$(PYTHON_BIN)/python manage.py schemamigration $(app) --initial $(DJANGO_POSTFIX)	
+	$(PYTHON_BIN)/python manage.py schemamigration $(app) --initial $(DJANGO_POSTFIX)
 else ifneq ($(wildcard dj/apps/$(app)/migrations/0001_*),)
 	$(PYTHON_BIN)/python manage.py schemamigration $(app) --auto $(DJANGO_POSTFIX)
 else

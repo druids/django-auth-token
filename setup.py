@@ -24,7 +24,7 @@ setup(
         'Topic :: Internet :: WWW/HTTP',
     ],
     install_requires=[
-        'django>=2.2.14,<4.0',
+        'django>=2.2.14, <4.0',
         'django-ipware>=3.0.2',
         'import_string==0.1.0',
         'django-chamber>=0.6.14',
@@ -32,5 +32,8 @@ setup(
         'django-choice-enumfields>=1.1.0',
         'tqdm>=4.62.3',
     ],
+    extras_require={
+        'msdal': ['requests>=2.26.0', 'msal>=1.20.0'],
+    },
     zip_safe=False
 )
