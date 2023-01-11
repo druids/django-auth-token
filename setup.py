@@ -33,7 +33,7 @@ setup(
         'tqdm>=4.62.3',
     ],
     extras_require={
-        'msdal': ['requests>=2.26.0', 'msal>=1.20.0'],
+        'mssso': ['requests>=2.26.0', 'msal>=1.20.0'],
     },
     zip_safe=False
 )
